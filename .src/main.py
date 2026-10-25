@@ -18,13 +18,24 @@ class SidebarDataKeys:
 
 @dataclass
 class PluginConfig:
-    id: str = "example"
-    verstion: str = "0.0"
-    main: str = "enter.py"
-    name: str = "Example"
-    author: str = "FelixHajimi"
-    description: str = "Example plugin"
-    icon: str = "users"
+    id: str
+    verstion: str
+    main: str
+    name: str
+    author: str
+    description: str
+
+
+@dataclass
+class DataFileFormat:
+    @dataclass
+    class Meta:
+        description: str
+        allowRead: list[str]
+        allowWrite: list[str]
+
+    meta: Meta
+    content: dict
 
 
 def createSidebar(sidebar: QtWidgets.QWidget, data: list[SidebarDataKeys | str]):
@@ -48,6 +59,22 @@ def setCurrentKey(key: str, tabWidget: QtWidgets.QTabWidget):
     for index in range(tabWidget.count()):
         if tabWidget.tabText(index) == key:
             tabWidget.setCurrentIndex(index)
+
+
+class API:
+    def __init__(self, pluginId: str):
+        self.pluginId = pluginId
+
+    def readFile(self, id: str, encoding: str = "utf-8"):
+        with open(f"data/{id}.json", "r", encoding=encoding) as read:
+            data = json.load(read)
+            data = DataFileFormat(
+                meta=DataFileFormat.Meta(**data["meta"]), content=data["content"]
+            )
+        if self.pluginId in data.meta.allowRead or "*" in data.meta.allowRead:
+            return data.content
+        else:
+            return None
 
 
 class Window(QtWidgets.QMainWindow):
@@ -78,7 +105,7 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
         # Plugin
         pluginButtons = []
         for file in os.listdir("plugin"):
-            if not file.endswith(".plugin") and not file.endswith(".zip"):
+            if not file.endswith(".zip"):
                 continue
             with zipfile.ZipFile(f"plugin/{file}", "r") as content:
                 config: PluginConfig = PluginConfig(
@@ -87,7 +114,10 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
                 plugin = types.ModuleType("plugin")
                 exec(content.read(config.main), plugin.__dict__)
                 sys.modules["plugin"] = plugin
-                pageWidget.addTab(plugin.Window(), config.name)
+                pluginWindow = plugin.Window()
+                pluginWindow.api = API(config.id)
+                pluginWindow.initUI()
+                pageWidget.addTab(pluginWindow, config.name)
                 pluginButtons.append(
                     SidebarDataKeys(
                         config.name,
@@ -122,13 +152,13 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
 
 app = QtWidgets.QApplication(sys.argv)
 app.setStyleSheet("""
-*[widgetType=title] {
+QLabel[type=title] {
     font-size: 24px;
     font-weight: bold;
     color: #222222;
 }
 
-*[widgetType=text] {
+QLabel[type=text] {
     font-size: 14px;
     color: #666666;
 }
