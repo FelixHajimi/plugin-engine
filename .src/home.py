@@ -10,11 +10,11 @@ class Home(QtWidgets.QWidget):
         layout.setSpacing(12)
 
         title = QtWidgets.QLabel("Home")
-        title.setProperty("widgetType", "title")
+        title.setProperty("type", "title")
         layout.addWidget(title)
 
         desc = QtWidgets.QLabel("Welcome to use.\nSelect the left menu to start the operation.")
-        desc.setProperty("widgetType", "text")
+        desc.setProperty("type", "text")
         layout.addWidget(desc)
 
         layout.addStretch()

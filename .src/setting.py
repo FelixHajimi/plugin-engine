@@ -278,14 +278,17 @@ QPushButton:hover{
                     "_type": "item",
                     "_id": "general.theme",
                     "_valueType": "combobox",
-                    "_default": {"English(en-us)": "Dark", "简体中文(zh-cn)": "深色"},
+                    "_default": {
+                        "English(en-us)": "Follow System",
+                        "简体中文(zh-cn)": "跟随系统",
+                    },
                     "_valueList": {
                         "简体中文(zh-cn)": ["浅色", "深色", "跟随系统"],
                         "English(en-us)": ["Light", "Dark", "Follow System"],
                     },
                     "_label": {"简体中文(zh-cn)": "主题", "English(en-us)": "Theme"},
                 },
-            }
+            },
         }
 
         createSettings(mainLayout, data, language)
