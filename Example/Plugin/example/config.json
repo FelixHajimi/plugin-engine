@@ -1,0 +1,8 @@
+{
+  "id": "example",
+  "version": "0.0",
+  "main": "enter.py",
+  "name": "Example",
+  "author": "FelixHajimi",
+  "description": "Example plugin"
+}
