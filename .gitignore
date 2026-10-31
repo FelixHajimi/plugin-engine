@@ -4,6 +4,7 @@ __pycache__
 
 # Project
 _*
+*.log
 
 # VSCode
 .vscode
