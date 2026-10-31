@@ -1,19 +1,17 @@
 {
-    "meta": {
-        "description": "Provide settings for the page",
-        "allowRead": [
-            "*"
-        ],
-        "allowWrite": []
+  "meta": {
+    "description": "Provide settings for the page",
+    "allowRead": ["*"],
+    "allowWrite": []
+  },
+  "content": {
+    "general.language": {
+      "type": "currentText",
+      "value": "zh-cn"
     },
-    "content": {
-        "general.language": {
-            "type": "currentText",
-            "value": "zh-cn"
-        },
-        "general.fristPage": {
-            "type": "text",
-            "value": ""
-        }
+    "general.fristPage": {
+      "type": "text",
+      "value": ""
     }
+  }
 }
