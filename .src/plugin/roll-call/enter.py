@@ -99,6 +99,8 @@ QPushButton:disabled {
 
         def importButtonFunc():
             studentList = self.api.readFile("studentList")
+            if studentList is None:
+                return
             waitList.clear()
             calledList.clear()
             waitList.addItems([item["name"] for item in studentList])
