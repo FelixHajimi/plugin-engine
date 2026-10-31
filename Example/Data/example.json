@@ -1,0 +1,10 @@
+{
+  "meta": {
+    "description": "Example data file",
+    "allowRead": ["*"],
+    "allowWrite": ["*"]
+  },
+  "content": {
+    "main": "data"
+  }
+}
