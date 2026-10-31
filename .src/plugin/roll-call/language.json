@@ -1,0 +1,14 @@
+{
+  "zh-cn": {
+    "button.importList": "导入名单",
+    "button.reset": "重置",
+    "button.randomPick": "随机抽取",
+    "button.cancel": "取消"
+  },
+  "en-us": {
+    "button.importList": "Import List",
+    "button.reset": "Reset",
+    "button.randomPick": "Random Pick",
+    "button.cancel": "Cancel"
+  }
+}
