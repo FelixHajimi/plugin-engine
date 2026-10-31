@@ -70,6 +70,21 @@ def createSidebar(sidebar: QtWidgets.QWidget, data: list[SidebarDataKeys | str])
     layout.addStretch()
 
 
+def createFiles(structure: dict, parentPath: str = "."):
+    for key in structure:
+        if key.startswith("_"):
+            continue
+        item: dict = structure[key]
+        currentPath = os.path.join(parentPath, key)
+        if item["_type"] == "folder":
+            os.makedirs(currentPath, exist_ok=True)
+            createFiles(item, currentPath)
+        elif item["_type"] == "file":
+            if key not in os.listdir(parentPath):
+                with open(currentPath, "w", encoding="utf-8") as write:
+                    write.write(item.get("_content", ""))
+
+
 def setPage(key: str, tabWidget: QtWidgets.QTabWidget):
     for index in range(tabWidget.count()):
         if tabWidget.tabText(index) == key:
@@ -124,20 +139,36 @@ class Translation:
             return fallback
 
 
+# Init
+fileStructure = {
+    "plugin": {"_type": "folder"},
+    "data": {
+        "_type": "folder",
+        "temp": {"_type": "folder"},
+        "setting.json": {
+            "_type": "file",
+            "content": '{"meta": {"description": "Provide settings for the page","allowRead": ["*"],"allowWrite": []},"content": {}}',
+        },
+    },
+    "logs": {"_type": "folder"},
+}
+createFiles(fileStructure)
+with open(f"data/setting.json", "r", encoding="utf-8") as f:
+    setting = json.load(f)
+    language = setting["content"]["general.language"]["value"]
+    languageMap = {
+        "zh-cn": {"setting": "设置"},
+        "en-us": {"setting": "Setting"},
+    }
+    tran = Translation(languageMap, language)
+
+
 class Window(QtWidgets.QMainWindow):
     signal = QtCore.Signal(dict)
 
     def __init__(self):
         super().__init__()
 
-        with open(f"data/setting.json", "r", encoding="utf-8") as f:
-            setting = json.load(f)
-            language = setting["content"]["general.language"]["value"]
-            languageMap = {
-                "zh-cn": {"setting": "设置"},
-                "en-us": {"setting": "Setting"},
-            }
-            tran = Translation(languageMap, language)
         self.resize(1000, 800)
         sidebar = QtWidgets.QWidget()
         sidebar.setFixedWidth(200)
@@ -193,6 +224,8 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
                         lambda _, name=config.name[language]: setPage(name, pageWidget),
                     )
                 )
+        if pluginButtons:
+            pluginButtons.append("-")
 
         # Emit Data
         self.signal.emit({"type": "setting", "content": setting["content"]})
@@ -203,7 +236,6 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
             sidebar,
             [
                 *pluginButtons,
-                "-",
                 SidebarDataKeys(
                     tran.exec("setting"),
                     lambda: setPage(tran.exec("setting"), pageWidget),
