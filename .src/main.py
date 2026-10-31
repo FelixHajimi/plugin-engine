@@ -7,6 +7,8 @@ import settingPage
 import zipfile
 import os
 import json
+import logging
+import time
 
 __version__ = "0.0"
 
@@ -37,11 +39,21 @@ class DataFileFormat:
         allowRead: list[str]
         allowWrite: list[str]
 
+        def get_dict(self):
+            return {
+                "description": self.description,
+                "allowRead": self.allowRead,
+                "allowWrite": self.allowWrite,
+            }
+
     meta: Meta
     content: typing.Any
 
     def __post_init__(self):
         self.meta = self.Meta(**self.meta)
+
+    def get_dict(self):
+        return {"meta": self.meta.get_dict(), "content": self.content}
 
 
 @dataclass
@@ -99,9 +111,17 @@ class API:
     def readFile(self, id: str, encoding: str = "utf-8"):
         if "../" in id or "..\\" in id:
             return None
-        with open(f"data/{id}.json", "r", encoding=encoding) as f:
-            data = json.load(f)
-            data = DataFileFormat(**data)
+        try:
+            with open(f"data/{id}.json", "r", encoding=encoding) as f:
+                data = json.load(f)
+                data = DataFileFormat(**data)
+        except FileNotFoundError as error:
+            logging.error(eval(tran.exec("log.error.readFileNotFound")), exc_info=True)
+            return None
+        except json.JSONDecodeError as error:
+            logging.error(eval(tran.exec("log.error.readFileBadJson")), exc_info=True)
+            return None
+
         if self.pluginId in data.meta.allowRead or "*" in data.meta.allowRead:
             return data.content
         else:
@@ -110,14 +130,36 @@ class API:
     def writeFile(self, id: str, _object: typing.Any, encoding: str = "utf-8"):
         if "../" in id or "..\\" in id:
             return None
-        with open(f"data/{id}.json", "r", encoding=encoding) as f:
-            data = json.load(f)
-            data = DataFileFormat(**data)
+        try:
+            with open(f"data/{id}.json", "r", encoding=encoding) as f:
+                data = json.load(f)
+                data = DataFileFormat(**data)
+        except FileNotFoundError as error:
+            logging.error(eval(tran.exec("log.error.readFileNotFound")), exc_info=True)
+            return None
+        except json.JSONDecodeError as error:
+            logging.error(eval(tran.exec("log.error.readFileBadJson")), exc_info=True)
+            return None
+
         if self.pluginId in data.meta.allowWrite or "*" in data.meta.allowWrite:
-            with open(f"data/{id}.json", "w", encoding=encoding) as f:
-                data.content = _object
-                json.dump(data, f, ensure_ascii=False)
+            try:
+                tempPath = f"data/temp/{id}.json"
+                with open(tempPath, "w", encoding=encoding) as f:
+                    data.content = _object
+                    json.dump(data.get_dict(), f, ensure_ascii=False)
+                os.replace(tempPath, f"data/{id}.json")
+            except OSError as error:
+                logging.error(
+                    eval(tran.exec("log.error.writeFileFailed")), exc_info=True
+                )
+                return None
+            except TypeError as error:
+                logging.error(
+                    eval(tran.exec("log.error.writeBadObject")), exc_info=True
+                )
+                return None
         else:
+            logging.error(eval(tran.exec("log.error.noWritePermission")), exc_info=True)
             return None
 
 
@@ -153,13 +195,59 @@ fileStructure = {
     "logs": {"_type": "folder"},
 }
 createFiles(fileStructure)
+
+handlerFormatter = logging.Formatter(
+    "[%(levelname)s]<%(pathname)s>(%(asctime)s)\n%(message)s"
+)
+startTimeHandler = logging.FileHandler(
+    f"logs/{time.strftime("%Y-%m-%d-%H-%M", time.localtime())}.log", encoding="utf-8"
+)
+startTimeHandler.setFormatter(handlerFormatter)
+startTimeHandler.setLevel(logging.WARN)
+lastHandler = logging.FileHandler(f"logs/last.log", encoding="utf-8")
+lastHandler.setFormatter(handlerFormatter)
+lastHandler.setLevel(logging.DEBUG)
+logger = logging.getLogger()
+logger.addHandler(startTimeHandler)
+logger.addHandler(lastHandler)
+logger.setLevel(logging.DEBUG)
+
 with open(f"data/setting.json", "r", encoding="utf-8") as f:
     setting = json.load(f)
     language = setting["content"]["general.language"]["value"]
     languageMap = {
-        "zh-cn": {"setting": "设置"},
-        "en-us": {"setting": "Setting"},
+        "zh-cn": {
+            "setting": "设置",
+            "log.error.pluginBadZip": 'f"插件 {file}: zip 损坏或不是有效压缩包"',
+            "log.error.pluginNoAccess": 'f"插件 {file}: 文件不存在或无权读取"',
+            "log.error.pluginMissingFile": 'f"插件 {file}: zip 内缺少必需文件(config.json / 入口文件)"',
+            "log.error.pluginBadJson": 'f"插件 {file}: 文件编码或 JSON 格式错误"',
+            "log.error.pluginBadConfig": 'f"插件 {file}: config.json 字段缺失或类型不符"',
+            "log.error.pluginCodeError": 'f"插件 {file}: 插件代码语法错误或缺 Window/onReceive"',
+            "log.error.pluginUnknown": 'f"插件 {file}: 未知错误 {type(error).__name__}: {error}"',
+            "log.error.readFileNotFound": 'f"数据文件 {id} 不存在"',
+            "log.error.readFileBadJson": 'f"数据文件 {id}: JSON 格式错误"',
+            "log.error.writeFileFailed": 'f"写入数据文件 {id} 失败: {error}"',
+            "log.error.writeBadObject": 'f"数据文件 {id} 内容不可序列化: {type(error).__name__}"',
+            "log.error.noWritePermission": 'f"插件 {self.pluginId} 无 {id} 的写权限"',
+        },
+        "en-us": {
+            "setting": "Setting",
+            "log.error.pluginBadZip": 'f"Plugin {file}: zip is corrupted or not a valid archive"',
+            "log.error.pluginNoAccess": 'f"Plugin {file}: file missing or no read permission"',
+            "log.error.pluginMissingFile": 'f"Plugin {file}: required file missing in zip (config.json / entry)"',
+            "log.error.pluginBadJson": 'f"Plugin {file}: invalid encoding or JSON format"',
+            "log.error.pluginBadConfig": 'f"Plugin {file}: config.json fields missing or wrong type"',
+            "log.error.pluginCodeError": 'f"Plugin {file}: syntax error or missing Window/onReceive"',
+            "log.error.pluginUnknown": 'f"Plugin {file}: unknown error {type(error).__name__}: {error}"',
+            "log.error.readFileNotFound": 'f"Data file {id} does not exist"',
+            "log.error.readFileBadJson": 'f"Data file {id}: invalid JSON format"',
+            "log.error.writeFileFailed": 'f"Failed to write data file {id}: {error}"',
+            "log.error.writeBadObject": 'f"Data file {id} content is not serializable: {type(error).__name__}"',
+            "log.error.noWritePermission": 'f"Plugin {self.pluginId} has no write permission to {id}"',
+        },
     }
+
     tran = Translation(languageMap, language)
 
 
@@ -195,35 +283,61 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
         for file in os.listdir("plugin"):
             if not file.endswith(".zip"):
                 continue
-            with zipfile.ZipFile(f"plugin/{file}", "r") as content:
-                # Import Plugin
-                config: PluginConfig = PluginConfig(
-                    **json.loads(content.read("config.json").decode("utf-8"))
-                )
-                plugin = types.ModuleType("plugin")
-                exec(content.read(config.main), plugin.__dict__)
-                sys.modules["plugin"] = plugin
-
-                # Plugin Init
-                pluginWindow: PluginWindow = plugin.Window()
-                pluginWindow.api = API(config.id)
-                self.signal.connect(pluginWindow.onReceive)
-                if "language.json" in content.namelist():
-                    self.signal.emit(
-                        {
-                            "type": "languageMap",
-                            "pluginId": config.id,
-                            "content": json.loads(content.read("language.json")),
-                        }
+            try:
+                with zipfile.ZipFile(f"plugin/{file}", "r") as content:
+                    # Import Plugin
+                    config: PluginConfig = PluginConfig(
+                        **json.loads(content.read("config.json").decode("utf-8"))
                     )
+                    plugin = types.ModuleType(f"plugin_{config.id}")
+                    exec(content.read(config.main), plugin.__dict__)
+                    sys.modules[f"plugin_{config.id}"] = plugin
 
-                pageWidget.addTab(pluginWindow, config.name[language])
-                pluginButtons.append(
-                    SidebarDataKeys(
-                        config.name[language],
-                        lambda _, name=config.name[language]: setPage(name, pageWidget),
+                    # Plugin Init
+                    pluginWindow: PluginWindow = plugin.Window()
+                    pluginWindow.api = API(config.id)
+                    self.signal.connect(pluginWindow.onReceive)
+                    if "language.json" in content.namelist():
+                        self.signal.emit(
+                            {
+                                "type": "languageMap",
+                                "pluginId": config.id,
+                                "content": json.loads(content.read("language.json")),
+                            }
+                        )
+
+                    pageWidget.addTab(pluginWindow, config.name[language])
+                    pluginButtons.append(
+                        SidebarDataKeys(
+                            config.name[language],
+                            lambda _, name=config.name[language]: setPage(
+                                name, pageWidget
+                            ),
+                        )
                     )
+            except zipfile.BadZipFile as error:
+                logging.error(eval(tran.exec("log.error.pluginBadZip")), exc_info=True)
+            except (FileNotFoundError, PermissionError) as error:
+                logging.error(
+                    eval(tran.exec("log.error.pluginNoAccess")), exc_info=True
                 )
+            except KeyError as error:
+                logging.error(
+                    eval(tran.exec("log.error.pluginMissingFile")), exc_info=True
+                )
+            except (UnicodeDecodeError, json.JSONDecodeError) as error:
+                logging.error(eval(tran.exec("log.error.pluginBadJson")), exc_info=True)
+            except TypeError as error:
+                logging.error(
+                    eval(tran.exec("log.error.pluginBadConfig")), exc_info=True
+                )
+            except (SyntaxError, AttributeError) as error:
+                logging.error(
+                    eval(tran.exec("log.error.pluginCodeError")), exc_info=True
+                )
+            except Exception as error:
+                logging.error(eval(tran.exec("log.error.pluginUnknown")), exc_info=True)
+
         if pluginButtons:
             pluginButtons.append("-")
 
