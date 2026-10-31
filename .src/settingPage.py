@@ -1,5 +1,6 @@
 from PySide6 import QtWidgets, QtCore, QtGui
 import typing
+import json
 
 
 def createSettings(
@@ -260,36 +261,93 @@ QPushButton:hover{
         mainLayout = QtWidgets.QFormLayout()
         mainLayout.setContentsMargins(40, 40, 40, 40)
         mainLayout.setSpacing(16)
-        language = "English(en-us)"
-        data = {
+        with open("data/setting.json", "r", encoding="utf-8") as f:
+            setting = json.load(f)
+        self.language = setting["content"]["general.language"]["value"]
+        self.data = {
             "_type": "group",
             "General": {
                 "_type": "group",
-                "_label": {"简体中文(zh-cn)": "常规", "English(en-us)": "General"},
+                "_label": {"zh-cn": "常规", "en-us": "General"},
                 "Language": {
                     "_type": "item",
                     "_id": "general.language",
                     "_valueType": "language",
-                    "_default": "English(en-us)",
-                    "_valueList": ["简体中文(zh-cn)", "English(en-us)"],
-                    "_label": {"简体中文(zh-cn)": "语言", "English(en-us)": "Language"},
+                    "_default": "en-us",
+                    "_valueList": ["zh-cn", "en-us"],
+                    "_label": {"zh-cn": "语言", "en-us": "Language"},
                 },
-                "Theme": {
+                "FristPage": {
                     "_type": "item",
-                    "_id": "general.theme",
-                    "_valueType": "combobox",
+                    "_id": "general.fristPage",
+                    "_valueType": "lineedit",
                     "_default": {
-                        "English(en-us)": "Follow System",
-                        "简体中文(zh-cn)": "跟随系统",
+                        "en-us": "",
+                        "zh-cn": "",
                     },
-                    "_valueList": {
-                        "简体中文(zh-cn)": ["浅色", "深色", "跟随系统"],
-                        "English(en-us)": ["Light", "Dark", "Follow System"],
+                    "_placeholder": {
+                        "en-us": "FristPage",
+                        "zh-cn": "启动界面",
                     },
-                    "_label": {"简体中文(zh-cn)": "主题", "English(en-us)": "Theme"},
+                    "_label": {"zh-cn": "启动界面", "en-us": "FristPage"},
                 },
             },
         }
 
-        createSettings(mainLayout, data, language)
+        createSettings(mainLayout, self.data, self.language)
         self.setLayout(mainLayout)
+        with open("data/setting.json", "r", encoding="utf-8") as f:
+            setting = json.load(f)
+            content = setting["content"]
+            for item in content:
+                if content[item]["type"] == "currentText":
+                    self.findChild(QtWidgets.QComboBox, item).setCurrentText(
+                        content[item]["value"]
+                    )
+                elif content[item]["type"] == "checked":
+                    self.findChild(QtWidgets.QCheckBox, item).setChecked(
+                        content[item]["value"]
+                    )
+                elif content[item]["type"] == "value":
+                    self.findChild(QtWidgets.QSlider, item).setValue(
+                        content[item]["value"]
+                    )
+                elif content[item]["type"] == "text":
+                    self.findChild(QtWidgets.QLineEdit, item).setText(
+                        content[item]["value"]
+                    )
+        saveTimer = QtCore.QTimer(self)
+        saveTimer.timeout.connect(self.saveSetting)
+        saveTimer.start(1000)
+
+    def saveSetting(self):
+        with open("data/setting.json", "r", encoding="utf-8") as f:
+            setting = json.load(f)
+
+        def collectConfig(data: dict):
+            result = {}
+            for key in data:
+                if key.startswith("_"):
+                    continue
+                item = data[key]
+                if item["_type"] == "group":
+                    result.update(collectConfig(item))
+                elif item["_type"] == "item":
+                    widget = self.findChild(QtWidgets.QWidget, item["_id"])
+                    if not widget:
+                        continue
+                    _type = item["_valueType"]
+                    if _type in ("combobox", "language"):
+                        value = {"type": "currentText", "value": widget.currentText()}
+                    elif _type == "checkbox":
+                        value = {"type": "checked", "value": widget.isChecked()}
+                    elif _type in ("slider", "spinbox"):
+                        value = {"type": "value", "value": widget.value()}
+                    elif _type in ("lineedit", "filepicker", "colorpicker"):
+                        value = {"type": "text", "value": widget.text()}
+                    result[item["_id"]] = value
+            return result
+
+        setting["content"] = collectConfig(self.data)
+        with open("data/setting.json", "w", encoding="utf-8") as f:
+            json.dump(setting, f, ensure_ascii=False, indent=4)
