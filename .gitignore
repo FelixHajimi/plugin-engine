@@ -3,7 +3,7 @@
 __pycache__
 
 # Project
-_*.py
+_*
 
 # VSCode
 .vscode
