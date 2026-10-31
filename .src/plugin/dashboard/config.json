@@ -1,0 +1,8 @@
+{
+  "id": "dashboard",
+  "version": "0.0",
+  "main": "enter.py",
+  "name": { "en-us": "Dashboard", "zh-cn": "仪表盘" },
+  "author": "FelixHajimi",
+  "description": "View real-time time and various status information."
+}
