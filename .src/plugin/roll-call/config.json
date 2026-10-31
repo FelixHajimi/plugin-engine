@@ -1,0 +1,8 @@
+{
+  "id": "roll-call",
+  "version": "0.0",
+  "main": "enter.py",
+  "name": { "en-us": "Roll Call", "zh-cn": "点名" },
+  "author": "FelixHajimi",
+  "description": "This plugin can randomly click on someone's name."
+}
