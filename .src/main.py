@@ -170,7 +170,7 @@ class API:
             return None
 
     def addUpdateFunc(self, func: types.MethodType, delay: int):
-        globalData.updateFuncs.append(FuncItem(func, delay, time.time()))
+        globalData.updateFuncs.append(FuncItem(func, delay, time.monotonic()))
 
 
 class Translation:
