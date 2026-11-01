@@ -11,7 +11,7 @@
             "type": "currentText",
             "value": "zh-cn"
         },
-        "general.fristPage": {
+        "general.firstPage": {
             "type": "text",
             "value": ""
         }
