@@ -1,9 +1,7 @@
 from PySide6 import QtWidgets, QtCore
 
 
-class API:
-    def __init__(self, pluginId: str): ...
-    def readFile(self, id: str, encoding: str = "utf-8"): ...
+class API: ...
 
 
 class Window(QtWidgets.QWidget):
