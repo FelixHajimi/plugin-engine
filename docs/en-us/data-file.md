@@ -44,4 +44,4 @@ Data files live in the `data/` directory and are JSON with permission metadata.
 }
 ```
 
-Settings are declared by the [settings page](../architecture.md) and saved automatically.
+Settings are declared by the [settings page](architecture.md) and saved automatically.
