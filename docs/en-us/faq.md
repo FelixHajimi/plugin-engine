@@ -42,7 +42,7 @@ If a write is interrupted, a temp file may remain under `data/temp/`. This is no
 
 ## How do I set the startup page
 
-In the settings page, enter the target page name (matching a tab label) in the `FristPage` field. Leaving it empty shows the first page.
+In the settings page, enter the target page name (matching a tab label) in the `FirstPage` field. Leaving it empty shows the first page.
 
 ## Where are data files by default
 
