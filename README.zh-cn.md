@@ -30,5 +30,5 @@ python main.py
 
 ## 文档
 
-- [中文文档](docs/zh-CN/)
-- [English docs](docs/en-US/)
+- [中文文档](docs/zh-cn/)
+- [English docs](docs/en-us/)

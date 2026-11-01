@@ -1,10 +1,13 @@
 {
-  "meta": {
-    "description": "Example data file",
-    "allowRead": ["*"],
-    "allowWrite": ["*"]
-  },
-  "content": {
-    "main": "data"
-  }
+    "meta": {
+        "description": {
+            "zh-cn": "示例数据文件",
+            "en-us": "Example data file"
+        },
+        "allowRead": ["*"],
+        "allowWrite": ["*"]
+    },
+    "content": {
+        "main": "data"
+    }
 }

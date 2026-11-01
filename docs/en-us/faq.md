@@ -42,7 +42,7 @@ If a write is interrupted, a temp file may remain under `data/temp/`. This is no
 
 ## How do I set the startup page
 
-In the settings page, enter the target page name (matching a tab label) in the `FristPage` field. Leaving it empty shows the first page.
+In the settings page, enter the target page name (matching a tab label) in the `FirstPage` field. Leaving it empty shows the first page.
 
 ## Where are data files by default
 
@@ -51,7 +51,3 @@ Under `.src/data/`, named `data/<id>.json`. `data/temp/` is the temporary direct
 ## My plugin needs extra Python libraries
 
 Import them inside the entry file. If a library is not installed, the plugin fails to load and logs an error — install the dependency with `pip install` first.
-
-## Why does .gitignore exclude so many files
-
-`.gitignore` excludes virtual environments, `logs/`, `__pycache__`, and underscore-prefixed internal files (`_*`). These are private and not published.
