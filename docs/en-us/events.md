@@ -25,5 +25,7 @@ def onReceive(self, data: dict):
 
 ## Notes
 
+- See the [methods document](methods.md) for the utilities exposed by the `methods` event.
+
 - `initUI` is the key initialization event; build your UI when you receive it.
 - `languageMap` is broadcast only when the plugin package contains `language.json`.
