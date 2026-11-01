@@ -2,7 +2,10 @@
   "id": "roll-call",
   "version": "0.0",
   "main": "enter.py",
-  "name": { "en-us": "Roll Call", "zh-cn": "点名" },
+  "name": { "zh-cn": "点名", "en-us": "Roll Call" },
   "author": "FelixHajimi",
-  "description": "This plugin can randomly click on someone's name."
+  "description": {
+    "zh-cn": "这个插件可以随机点名",
+    "en-us": "This plugin can randomly roll-call"
+  }
 }

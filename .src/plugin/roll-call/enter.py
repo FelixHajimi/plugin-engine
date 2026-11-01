@@ -3,9 +3,6 @@ import random
 
 
 class API:
-    pluginId: str
-
-    def __init__(self, pluginId: str): ...
     def readFile(self, id: str, encoding: str = "utf-8"): ...
 
 
@@ -63,35 +60,35 @@ QPushButton:disabled {
 }
 """)
 
-        mainLayout = QtWidgets.QGridLayout()
-        mainLayout.setSpacing(2)
-        mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout = QtWidgets.QGridLayout()
+        self.mainLayout.setSpacing(2)
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
 
         # Wait List
-        waitList = QtWidgets.QListWidget()
-        mainLayout.addWidget(waitList, 0, 0, 1, 2)
+        self.waitList = QtWidgets.QListWidget()
+        self.mainLayout.addWidget(self.waitList, 0, 0, 1, 2)
 
         # Called List
-        calledList = QtWidgets.QListWidget()
-        mainLayout.addWidget(calledList, 1, 0, 1, 2)
+        self.calledList = QtWidgets.QListWidget()
+        self.mainLayout.addWidget(self.calledList, 1, 0, 1, 2)
 
         # Message Label
-        messageLabel = QtWidgets.QLabel()
-        messageLabel.setSizePolicy(
+        self.messageLabel = QtWidgets.QLabel()
+        self.messageLabel.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
             QtWidgets.QSizePolicy.Policy.Expanding,
         )
-        messageLabel.setStyleSheet("font-size: 36px;")
-        messageLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        messageLabel.setText("-")
-        mainLayout.addWidget(messageLabel, 0, 2, 2, 2)
+        self.messageLabel.setStyleSheet("font-size: 36px;")
+        self.messageLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.messageLabel.setText("-")
+        self.mainLayout.addWidget(self.messageLabel, 0, 2, 2, 2)
 
         # Bottom Buttons
         policy = QtWidgets.QSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
             QtWidgets.QSizePolicy.Policy.Preferred,
         )
-        mainLayout.setRowMinimumHeight(3, 50)
+        self.mainLayout.setRowMinimumHeight(3, 50)
 
         self.importButton = QtWidgets.QPushButton()
         self.importButton.setText(self.tran.exec("button.importList"))
@@ -101,25 +98,25 @@ QPushButton:disabled {
             studentList = self.api.readFile("studentList")
             if studentList is None:
                 return
-            waitList.clear()
-            calledList.clear()
-            waitList.addItems([item["name"] for item in studentList])
+            self.waitList.clear()
+            self.calledList.clear()
+            self.waitList.addItems([item["name"] for item in studentList])
 
         importButtonFunc()
 
         self.importButton.clicked.connect(importButtonFunc)
-        mainLayout.addWidget(self.importButton, 3, 0, 1, 1)
+        self.mainLayout.addWidget(self.importButton, 3, 0, 1, 1)
 
         self.resetButton = QtWidgets.QPushButton()
         self.resetButton.setText(self.tran.exec("button.reset"))
         self.resetButton.setSizePolicy(policy)
 
         def resetButtonFunc():
-            waitList.clear()
-            calledList.clear()
+            self.waitList.clear()
+            self.calledList.clear()
 
         self.resetButton.clicked.connect(resetButtonFunc)
-        mainLayout.addWidget(self.resetButton, 3, 1, 1, 1)
+        self.mainLayout.addWidget(self.resetButton, 3, 1, 1, 1)
 
         self.randomPickButton = QtWidgets.QPushButton()
         self.randomPickButton.setText(self.tran.exec("button.randomPick"))
@@ -128,36 +125,36 @@ QPushButton:disabled {
         def randomPickButtonFunc():
             studentList = [
                 item.text()
-                for i in range(waitList.count())
-                if (item := waitList.item(i))
+                for i in range(self.waitList.count())
+                if (item := self.waitList.item(i))
             ]
             if studentList:
                 name = random.choice(studentList)
-                messageLabel.setText(name)
-                waitList.takeItem(studentList.index(name))
-                calledList.addItem(name)
+                self.messageLabel.setText(name)
+                self.waitList.takeItem(studentList.index(name))
+                self.calledList.addItem(name)
             else:
-                messageLabel.setText("-")
+                self.messageLabel.setText("-")
 
         self.randomPickButton.clicked.connect(randomPickButtonFunc)
-        mainLayout.addWidget(self.randomPickButton, 3, 2, 1, 1)
+        self.mainLayout.addWidget(self.randomPickButton, 3, 2, 1, 1)
 
         self.cancelButton = QtWidgets.QPushButton()
         self.cancelButton.setText(self.tran.exec("button.cancel"))
         self.cancelButton.setSizePolicy(policy)
 
         def cancelButtonFunc():
-            if calledList.currentItem() is None:
-                messageLabel.setText("-")
+            if self.calledList.currentItem() is None:
+                self.messageLabel.setText("-")
                 return
-            name = calledList.currentItem().text()
-            calledList.takeItem(calledList.currentIndex().row())
-            waitList.addItem(name)
+            name = self.calledList.currentItem().text()
+            self.calledList.takeItem(self.calledList.currentIndex().row())
+            self.waitList.addItem(name)
 
         self.cancelButton.clicked.connect(cancelButtonFunc)
-        mainLayout.addWidget(self.cancelButton, 3, 3, 1, 1)
+        self.mainLayout.addWidget(self.cancelButton, 3, 3, 1, 1)
 
-        self.setLayout(mainLayout)
+        self.setLayout(self.mainLayout)
 
     def updateUI(self):
         self.importButton.setText(self.tran.exec("button.importList"))

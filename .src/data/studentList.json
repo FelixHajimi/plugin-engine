@@ -1,6 +1,9 @@
 {
   "meta": {
-    "description": "Used to get the student list.",
+    "description": {
+      "zh-cn": "用于获取学生名单",
+      "en-us": "Used to get the student list"
+    },
     "allowRead": ["roll-call"],
     "allowWrite": []
   },

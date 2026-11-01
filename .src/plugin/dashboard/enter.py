@@ -1,10 +1,10 @@
 from PySide6 import QtWidgets, QtCore
 import time
+import types
 
 
 class API:
-    def __init__(self, pluginId: str): ...
-    def readFile(self, id: str, encoding: str = "utf-8"): ...
+    def addUpdateFunc(self, func: types.MethodType, delay: int): ...
 
 
 class Window(QtWidgets.QWidget):
@@ -42,9 +42,7 @@ class Window(QtWidgets.QWidget):
 
         self.setLayout(self.mainLayout)
 
-        self.updateTimer = QtCore.QTimer()
-        self.updateTimer.timeout.connect(self.updateTime)
-        self.updateTimer.start(1000)
+        self.api.addUpdateFunc(self.updateTime, 1)
 
     @QtCore.Slot(dict)
     def onReceive(self, data: dict):

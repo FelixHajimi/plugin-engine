@@ -1,6 +1,9 @@
 {
     "meta": {
-        "description": "Provide settings for the page",
+        "description": {
+            "zh-cn": "提供页面设置",
+            "en-us": "Provide settings for the page"
+        },
         "allowRead": [
             "*"
         ],
