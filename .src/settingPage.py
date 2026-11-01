@@ -277,7 +277,7 @@ QPushButton:hover{
                     "_valueList": ["zh-cn", "en-us"],
                     "_label": {"zh-cn": "语言", "en-us": "Language"},
                 },
-                "FristPage": {
+                "FirstPage": {
                     "_type": "item",
                     "_id": "general.theme",
                     "_valueType": "combobox",
@@ -286,7 +286,7 @@ QPushButton:hover{
                         "简体中文(zh-cn)": ["浅色", "深色", "跟随系统"],
                         "English(en-us)": ["Light", "Dark", "Follow System"],
                     },
-                    "_label": {"zh-cn": "启动界面", "en-us": "FristPage"},
+                    "_label": {"zh-cn": "启动界面", "en-us": "FirstPage"},
                 },
             }
         }
