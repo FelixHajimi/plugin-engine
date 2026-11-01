@@ -40,4 +40,5 @@ QLabel[type=text] {
 
     @QtCore.Slot(dict)
     def onReceive(self, data: dict):
-        pass
+        if data["type"] == "initUI":
+            self.initUI()
