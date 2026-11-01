@@ -277,19 +277,19 @@ QPushButton:hover{
                     "_valueList": ["zh-cn", "en-us"],
                     "_label": {"zh-cn": "语言", "en-us": "Language"},
                 },
-                "FristPage": {
+                "FirstPage": {
                     "_type": "item",
-                    "_id": "general.fristPage",
+                    "_id": "general.firstPage",
                     "_valueType": "lineedit",
                     "_default": {
                         "en-us": "",
                         "zh-cn": "",
                     },
                     "_placeholder": {
-                        "en-us": "FristPage",
+                        "en-us": "FirstPage",
                         "zh-cn": "启动界面",
                     },
-                    "_label": {"zh-cn": "启动界面", "en-us": "FristPage"},
+                    "_label": {"zh-cn": "启动界面", "en-us": "FirstPage"},
                 },
             },
         }
