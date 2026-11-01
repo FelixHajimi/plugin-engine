@@ -3,6 +3,8 @@ import random
 
 
 class API:
+    pluginId: str
+
     def readFile(self, id: str, encoding: str = "utf-8"): ...
 
 
@@ -20,8 +22,6 @@ class Window(QtWidgets.QWidget):
         self.api: API
 
         self.tran: Translation
-        self.language: str
-        self.languageMap: dict[str, dict[str, str]]
 
     def initUI(self):
         self.setStyleSheet("""
@@ -114,6 +114,7 @@ QPushButton:disabled {
         def resetButtonFunc():
             self.waitList.clear()
             self.calledList.clear()
+            self.messageLabel.setText("-")
 
         self.resetButton.clicked.connect(resetButtonFunc)
         self.mainLayout.addWidget(self.resetButton, 3, 1, 1, 1)
@@ -156,22 +157,12 @@ QPushButton:disabled {
 
         self.setLayout(self.mainLayout)
 
-    def updateUI(self):
-        self.importButton.setText(self.tran.exec("button.importList"))
-        self.resetButton.setText(self.tran.exec("button.reset"))
-        self.randomPickButton.setText(self.tran.exec("button.randomPick"))
-        self.cancelButton.setText(self.tran.exec("button.cancel"))
-
     @QtCore.Slot(dict)
     def onReceive(self, data: dict):
+        if not data.get("pluginId", "*") in (self.api.pluginId, "*"):
+            return
         content = data.get("content")
-        if data["type"] == "setting":
-            self.language = content["general.language"]["value"]
-        elif data["type"] == "languageMap":
-            self.languageMap = content
-        elif data["type"] == "methods":
-            self.tran = content["translation"](self.languageMap, self.language)
+        if data["type"] == "methods":
+            self.tran = content["translation"]
         elif data["type"] == "initUI":
             self.initUI()
-        elif data["type"] == "updateUI":
-            self.updateUI()

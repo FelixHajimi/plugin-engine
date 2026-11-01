@@ -4,6 +4,8 @@ import types
 
 
 class API:
+    pluginId: str
+
     def addUpdateFunc(self, func: types.MethodType, delay: int): ...
 
 
@@ -46,5 +48,7 @@ class Window(QtWidgets.QWidget):
 
     @QtCore.Slot(dict)
     def onReceive(self, data: dict):
+        if not data.get("pluginId", "*") in (self.api.pluginId, "*"):
+            return
         if data["type"] == "initUI":
             self.initUI()
