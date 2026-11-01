@@ -1,8 +1,8 @@
 {
-  "id": "example",
-  "version": "0.0",
-  "main": "enter.py",
-  "name": "Example",
-  "author": "FelixHajimi",
-  "description": "Example plugin"
+    "id": "example",
+    "version": "0.0",
+    "main": "enter.py",
+    "name": { "zh-cn": "示例", "en-us": "Example" },
+    "author": "FelixHajimi",
+    "description": { "zh-cn": "示例插件", "en-us": "Example plugin" }
 }
