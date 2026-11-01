@@ -8,14 +8,14 @@ plugin-engine/
 │   ├── main.py              # entry: plugin loading, signal dispatch, sidebar & page architecture
 │   └── settingPage.py       # declarative settings page (auto-generated form + auto-save)
 ├── docs/
-│   ├── zh-CN/               # Chinese documentation
-│   └── en-US/               # English documentation
+│   ├── zh-cn/               # Chinese documentation
+│   └── en-us/               # English documentation
 ├── Example/
 │   ├── Plugin/example/      # example plugin source + example.zip
 │   └── Data/example.json    # data-file format sample
 ├── LICENSE
 ├── README.md
-└── README.zh-CN.md
+└── README.zh-cn.md
 ```
 
 ## Runtime Directories
