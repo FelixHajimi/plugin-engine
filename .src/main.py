@@ -170,7 +170,7 @@ class API:
             return None
 
     def addUpdateFunc(self, func: types.MethodType, delay: int):
-        globalData.updateFuncs.append(FuncItem(func, delay, time.monotonic()))
+        globalVariables.updateFuncs.append(FuncItem(func, delay, time.monotonic()))
 
 
 class Translation:
@@ -273,11 +273,11 @@ with open(f"data/setting.json", "r", encoding="utf-8") as f:
 
 
 ## Set Global Variables
-class Datas:
+class GlobalVariables:
     updateFuncs: list[FuncItem] = []
 
 
-globalData = Datas()
+globalVariables = GlobalVariables()
 
 
 class Window(QtWidgets.QMainWindow):
@@ -313,6 +313,7 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
 
         # Plugin
         pluginButtons = []
+        pluginLanguageMap = {}
         for file in os.listdir("plugin"):
             if not file.endswith(".zip"):
                 continue
@@ -331,13 +332,7 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
                     pluginWindow.api = API(config.id)
                     self.signal.connect(pluginWindow.onReceive)
                     if "language.json" in content.namelist():
-                        self.signal.emit(
-                            {
-                                "type": "languageMap",
-                                "pluginId": config.id,
-                                "content": json.loads(content.read("language.json")),
-                            }
-                        )
+                        pluginLanguageMap = json.loads(content.read("language.json"))
 
                     pageWidget.addTab(pluginWindow, config.name[language])
                     pluginButtons.append(
@@ -376,7 +371,17 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
 
         # Emit Data
         self.signal.emit({"type": "setting", "content": setting["content"]})
-        self.signal.emit({"type": "methods", "content": {"translation": Translation}})
+        self.signal.emit(
+            {
+                "type": "methods",
+                "content": {
+                    "translation": Translation(
+                        pluginLanguageMap,
+                        setting["content"]["general.language"]["value"],
+                    )
+                },
+            }
+        )
         self.signal.emit({"type": "initUI"})
 
         createSidebar(
@@ -390,7 +395,7 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
                 SidebarDataKeys(f"v{__version__}", group="text"),
             ],
         )
-        setPage(setting["content"]["general.fristPage"]["value"], pageWidget)
+        setPage(setting["content"]["general.firstPage"]["value"], pageWidget)
 
         mainLayout = QtWidgets.QHBoxLayout()
         mainLayout.setContentsMargins(0, 0, 0, 0)
@@ -404,7 +409,7 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
 
     def mainTimerFunc(self):
         nowTime = time.monotonic()
-        for funcItem in globalData.updateFuncs:
+        for funcItem in globalVariables.updateFuncs:
             if nowTime - funcItem.startTime >= funcItem.delay:
                 funcItem.func()
                 funcItem.startTime = nowTime
