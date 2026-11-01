@@ -62,6 +62,13 @@ class PluginWindow:
     onReceive: types.MethodType
 
 
+@dataclass
+class FuncItem:
+    func: types.MethodType
+    delay: int
+    startTime: float
+
+
 # Program Built-in Methods
 def createSidebar(sidebar: QtWidgets.QWidget, data: list[SidebarDataKeys | str]):
     layout = QtWidgets.QVBoxLayout(sidebar)
@@ -162,6 +169,9 @@ class API:
             logging.error(eval(tran.exec("log.error.noWritePermission")), exc_info=True)
             return None
 
+    def addUpdateFunc(self, func: types.MethodType, delay: int):
+        globalData.updateFuncs.append(FuncItem(func, delay, time.time()))
+
 
 class Translation:
     def __init__(self, languageMap: dict[str, dict[str, str]], language: str):
@@ -182,6 +192,7 @@ class Translation:
 
 
 # Init
+## Create Files
 fileStructure = {
     "plugin": {"_type": "folder"},
     "data": {
@@ -196,22 +207,32 @@ fileStructure = {
 }
 createFiles(fileStructure)
 
+## Log
+logFiles = os.listdir("logs")
+while len(logFiles) > 10:
+    os.remove(f"logs/{logFiles[0]}")
+    logFiles = os.listdir("logs")
+
 handlerFormatter = logging.Formatter(
     "[%(levelname)s]<%(pathname)s>(%(asctime)s)\n%(message)s"
 )
+
 startTimeHandler = logging.FileHandler(
     f"logs/{time.strftime("%Y-%m-%d-%H-%M", time.localtime())}.log", encoding="utf-8"
 )
 startTimeHandler.setFormatter(handlerFormatter)
 startTimeHandler.setLevel(logging.WARN)
+
 lastHandler = logging.FileHandler(f"logs/last.log", encoding="utf-8")
 lastHandler.setFormatter(handlerFormatter)
 lastHandler.setLevel(logging.DEBUG)
+
 logger = logging.getLogger()
 logger.addHandler(startTimeHandler)
 logger.addHandler(lastHandler)
 logger.setLevel(logging.DEBUG)
 
+## Setting And Language
 with open(f"data/setting.json", "r", encoding="utf-8") as f:
     setting = json.load(f)
     language = setting["content"]["general.language"]["value"]
@@ -251,6 +272,14 @@ with open(f"data/setting.json", "r", encoding="utf-8") as f:
     tran = Translation(languageMap, language)
 
 
+## Set Global Variables
+class Datas:
+    updateFuncs: list[FuncItem] = []
+
+
+globalData = Datas()
+
+
 class Window(QtWidgets.QMainWindow):
     signal = QtCore.Signal(dict)
 
@@ -277,6 +306,10 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
         pageWidget.setStyleSheet("background: white;")
 
         pageWidget.addTab(settingPage.Setting(), tran.exec("setting"))
+
+        self.mainTimer = QtCore.QTimer()
+        self.mainTimer.timeout.connect(self.mainTimerFunc)
+        self.mainTimer.start(50)
 
         # Plugin
         pluginButtons = []
@@ -368,6 +401,13 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
         container = QtWidgets.QWidget()
         container.setLayout(mainLayout)
         self.setCentralWidget(container)
+
+    def mainTimerFunc(self):
+        nowTime = time.monotonic()
+        for funcItem in globalData.updateFuncs:
+            if nowTime - funcItem.startTime >= funcItem.delay:
+                funcItem.func()
+                funcItem.startTime = nowTime
 
 
 app = QtWidgets.QApplication(sys.argv)
