@@ -333,6 +333,18 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
                     self.signal.connect(pluginWindow.onReceive)
                     if "language.json" in content.namelist():
                         pluginLanguageMap = json.loads(content.read("language.json"))
+                    self.signal.emit(
+                        {
+                            "type": "methods",
+                            "content": {
+                                "translation": Translation(
+                                    pluginLanguageMap,
+                                    setting["content"]["general.language"]["value"],
+                                )
+                            },
+                            "pluginId": config.id,
+                        }
+                    )
 
                     pageWidget.addTab(pluginWindow, config.name[language])
                     pluginButtons.append(
@@ -371,17 +383,6 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
 
         # Emit Data
         self.signal.emit({"type": "setting", "content": setting["content"]})
-        self.signal.emit(
-            {
-                "type": "methods",
-                "content": {
-                    "translation": Translation(
-                        pluginLanguageMap,
-                        setting["content"]["general.language"]["value"],
-                    )
-                },
-            }
-        )
         self.signal.emit({"type": "initUI"})
 
         createSidebar(
