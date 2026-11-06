@@ -327,6 +327,7 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
                     plugin = types.ModuleType(pluginName)
                     plugin.__package__ = pluginName
                     plugin.__path__ = []
+                    sys.modules[pluginName] = plugin
                     for name in content.namelist():
                         if (
                             name.endswith(".py")
@@ -334,14 +335,13 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
                             and name != "__init__.py"
                             and "/" not in name
                         ):
-                            subName = f"{pluginName}.py"
+                            subName = f"{pluginName}.{name[:-3]}"
                             sub = types.ModuleType(subName)
                             sub.__package__ = pluginName
                             sub.__file__ = name
                             sys.modules[subName] = sub
                             exec(content.read(name), sub.__dict__)
                     exec(content.read(config.main), plugin.__dict__)
-                    sys.modules[pluginName] = plugin
 
                     # Plugin Init
                     pluginWindow: PluginWindow = plugin.Window()
