@@ -214,7 +214,7 @@ while len(logFiles) > 10:
     logFiles = os.listdir("logs")
 
 handlerFormatter = logging.Formatter(
-    "[%(levelname)s]<%(pathname)s>(%(asctime)s)\n%(message)s"
+    "[%(levelname)s]<%(pathname)s>(%(asctime)s)\n%(message)s\n"
 )
 
 startTimeHandler = logging.FileHandler(
@@ -223,7 +223,7 @@ startTimeHandler = logging.FileHandler(
 startTimeHandler.setFormatter(handlerFormatter)
 startTimeHandler.setLevel(logging.WARN)
 
-lastHandler = logging.FileHandler(f"logs/last.log", encoding="utf-8")
+lastHandler = logging.FileHandler("logs/last.log", "w", encoding="utf-8")
 lastHandler.setFormatter(handlerFormatter)
 lastHandler.setLevel(logging.DEBUG)
 
@@ -323,9 +323,25 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
                     config: PluginConfig = PluginConfig(
                         **json.loads(content.read("config.json").decode("utf-8"))
                     )
-                    plugin = types.ModuleType(f"plugin_{config.id}")
+                    pluginName = f"plugin_{config.id}"
+                    plugin = types.ModuleType(pluginName)
+                    plugin.__package__ = pluginName
+                    plugin.__path__ = []
+                    for name in content.namelist():
+                        if (
+                            name.endswith(".py")
+                            and name != config.main
+                            and name != "__init__.py"
+                            and "/" not in name
+                        ):
+                            subName = f"{pluginName}.py"
+                            sub = types.ModuleType(subName)
+                            sub.__package__ = pluginName
+                            sub.__file__ = name
+                            sys.modules[subName] = sub
+                            exec(content.read(name), sub.__dict__)
                     exec(content.read(config.main), plugin.__dict__)
-                    sys.modules[f"plugin_{config.id}"] = plugin
+                    sys.modules[pluginName] = plugin
 
                     # Plugin Init
                     pluginWindow: PluginWindow = plugin.Window()
