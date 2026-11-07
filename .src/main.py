@@ -433,6 +433,87 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
 
 
 app = QtWidgets.QApplication(sys.argv)
+app.setStyleSheet("""
+/* Button: Basic */
+*[class=button] {
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 12);
+    padding: 10px;
+}
+*[class=button]:hover {
+    background-color: rgba(0, 0, 0, 25);
+}
+*[class=button]:pressed {
+    background-color: rgba(0, 0, 0, 45);
+}
+
+/* Button: Primary */
+*[class=button][type=primary] {
+    background-color: #0095FF;
+    color: #FFFFFF;
+}
+*[class=button][type=primary]:hover {
+    background-color: #33AAFF;
+}
+*[class=button][type=primary]:pressed {
+    background-color: #007ACC;
+}
+
+/* Button: Danger */
+*[class=button][type=danger] {
+    background-color: rgba(255, 59, 48, 15);
+    color: #FF3B30;
+}
+*[class=button][type=danger]:hover {
+    background-color: rgba(255, 59, 48, 30);
+}
+*[class=button][type=danger]:pressed {
+    background-color: rgba(255, 59, 48, 45);
+}
+
+/* Button: Disabled */
+*[class=button]:disabled {
+    background-color: rgba(0, 0, 0, 6);
+    color: rgba(0, 0, 0, 100);
+}
+
+/* Text */
+*[class=text][type=title] {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1F1F1F;
+}
+*[class=text][type=subtitle] {
+    font-size: 14px;
+    color: #666666;
+}
+*[class=text][type=body] {
+    font-size: 13px;
+    color: #333333;
+}
+*[class=text][type=hint] {
+    font-size: 12px;
+    color: #999999;
+}
+
+/* Input */
+*[class=input] {
+    border: 1px solid #DDDDDD;
+    border-radius: 8px;
+    padding: 8px 10px;
+    background-color: #FFFFFF;
+}
+*[class=input]:focus {
+    border: 1px solid #0095FF;
+}
+
+/* Card container */
+*[class=card] {
+    background-color: #FFFFFF;
+    border: 1px solid #EEEEEE;
+    border-radius: 10px;
+}
+""")
 window = Window()
 window.show()
 sys.exit(app.exec())
