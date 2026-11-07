@@ -174,11 +174,11 @@ class API:
 
 
 class Translation:
-    def __init__(self, languageMap: dict[str, dict[str, str]], language: str):
+    def __init__(self, languageMap: dict[str, dict[str, typing.Any]], language: str):
         self.languageMap = languageMap
         self.language = language
 
-    def exec(self, key: str, fallback: str = "") -> str:
+    def exec(self, key: str, fallback: str = "") -> typing.Any:
         try:
             if self.language not in self.languageMap:
                 if "en-us" not in self.languageMap:
