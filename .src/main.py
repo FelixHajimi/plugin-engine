@@ -17,7 +17,7 @@ __version__ = "0.0"
 @dataclass
 class SidebarDataKeys:
     text: str | None
-    func: types.FunctionType | None = lambda: None
+    func: typing.Callable | None = lambda: None
     group: str | None = None
 
 
@@ -59,12 +59,12 @@ class DataFileFormat:
 @dataclass
 class PluginWindow:
     api: "API"
-    onReceive: types.MethodType
+    onReceive: typing.Callable
 
 
 @dataclass
 class FuncItem:
-    func: types.MethodType
+    func: typing.Callable
     delay: int
     startTime: float
 
@@ -169,7 +169,7 @@ class API:
             logging.error(eval(tran.exec("log.error.noWritePermission")), exc_info=True)
             return None
 
-    def addUpdateFunc(self, func: types.MethodType, delay: int):
+    def addUpdateFunc(self, func: typing.Callable, delay: int):
         globalVariables.updateFuncs.append(FuncItem(func, delay, time.monotonic()))
 
 
