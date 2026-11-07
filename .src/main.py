@@ -303,7 +303,8 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
 """)
         pageWidget = QtWidgets.QTabWidget()
         pageWidget.tabBar().hide()
-        pageWidget.setStyleSheet("background: white;")
+        pageWidget.setObjectName("pageWidget")
+        pageWidget.setStyleSheet("#pageWidget {background: white;}")
 
         pageWidget.addTab(settingPage.Setting(), tran.exec("setting"))
 
