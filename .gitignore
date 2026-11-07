@@ -2,9 +2,10 @@
 .*venv
 __pycache__
 
-# Project
-_*
-*.log
-
 # VSCode
 .vscode
+
+# Project
+_*
+!__init__.py
+*.log
