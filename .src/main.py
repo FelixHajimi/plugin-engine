@@ -204,6 +204,8 @@ class API:
         timer = QtCore.QTimer(messageWidget, singleShot=True)
         timer.timeout.connect(messageWidget.deleteLater)
         timer.start(delay)
+        messageWidget.enterEvent = timer.stop
+        messageWidget.leaveEvent = timer.start(delay)
 
 
 class Translation:
