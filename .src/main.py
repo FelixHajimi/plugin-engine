@@ -324,24 +324,8 @@ class Window(QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
-        messageWidget = QtWidgets.QWidget()
-        messageWidget.setWindowFlags(
-            QtCore.Qt.WindowType.FramelessWindowHint
-            | QtCore.Qt.WindowType.Tool
-            | QtCore.Qt.WindowType.WindowStaysOnTopHint
-        )
-        messageWidget.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
-        messageWidget.setAttribute(QtCore.Qt.WidgetAttribute.WA_StyledBackground, True)
-        messageWidget.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
-        self.messageLayout = QtWidgets.QVBoxLayout(messageWidget)
-        self.messageLayout.setAlignment(
-            QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignRight
-        )
-        messageWidget.show()
-        self.resizeEvent = lambda event: messageWidget.resize(event.size())
-        self.moveEvent = lambda event: messageWidget.move(event.pos())
-
         self.resize(1000, 800)
+
         sidebar = QtWidgets.QWidget()
         sidebar.setFixedWidth(200)
         sidebar.setObjectName("sidebar")
@@ -360,6 +344,15 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
         pageWidget.tabBar().hide()
         pageWidget.setObjectName("pageWidget")
         pageWidget.setStyleSheet("#pageWidget {background: white;}")
+
+        messageWidget = QtWidgets.QWidget(pageWidget)
+        messageWidget.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
+        self.messageLayout = QtWidgets.QVBoxLayout(messageWidget)
+        self.messageLayout.setAlignment(
+            QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignRight
+        )
+        pageWidget.resizeEvent = lambda event: messageWidget.resize(event.size())
+        pageWidget.changeEvent = lambda _: messageWidget.raise_()
 
         pageWidget.addTab(settingPage.Setting(), tran.exec("setting"))
 
