@@ -172,6 +172,45 @@ class API:
     def addUpdateFunc(self, func: typing.Callable, delay: int):
         globalVariables.updateFuncs.append(FuncItem(func, delay, time.monotonic()))
 
+    def showMessage(
+        self,
+        text: str,
+        level: int = 0,
+        delay: int = 3000,
+        clickedFunc: typing.Callable = lambda: None,
+        customWidget: QtWidgets.QWidget | None = None,
+    ):
+        messageWidget = QtWidgets.QWidget()
+        messageWidget.setStyleSheet("padding: 5px;border-radius: 10px;")
+        messageLayout = QtWidgets.QVBoxLayout(messageWidget)
+
+        label = QtWidgets.QLabel()
+        label.mousePressEvent = lambda _: clickedFunc()
+        if level == 0:
+            label.setStyleSheet("background-color: #37ff00")
+            label.setText("🔧 " + text)
+        elif level == 1:
+            label.setStyleSheet("background-color: #0dadf9")
+            label.setText("📄 " + text)
+        elif level == 2:
+            label.setStyleSheet("background-color: #ffe800")
+            label.setText("⚠ " + text)
+        elif level == 3:
+            label.setStyleSheet("background-color: #fe534c")
+            label.setText("❌ " + text)
+        messageLayout.addWidget(label)
+
+        if customWidget:
+            messageLayout.addWidget(customWidget)
+
+        window.messageLayout.addWidget(messageWidget)
+
+        timer = QtCore.QTimer(messageWidget, singleShot=True)
+        timer.timeout.connect(messageWidget.deleteLater)
+        timer.start(delay)
+        messageWidget.enterEvent = lambda _: timer.stop()
+        messageWidget.leaveEvent = lambda _: timer.start(delay)
+
 
 class Translation:
     def __init__(self, languageMap: dict[str, dict[str, typing.Any]], language: str):
@@ -285,6 +324,22 @@ class Window(QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
+        messageWidget = QtWidgets.QWidget()
+        messageWidget.setWindowFlags(
+            QtCore.Qt.WindowType.FramelessWindowHint
+            | QtCore.Qt.WindowType.Tool
+            | QtCore.Qt.WindowType.WindowStaysOnTopHint
+        )
+        messageWidget.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
+        messageWidget.setAttribute(QtCore.Qt.WidgetAttribute.WA_StyledBackground, True)
+        messageWidget.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
+        self.messageLayout = QtWidgets.QVBoxLayout(messageWidget)
+        self.messageLayout.setAlignment(
+            QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignRight
+        )
+        messageWidget.show()
+        self.resizeEvent = lambda event: messageWidget.resize(event.size())
+        self.moveEvent = lambda event: messageWidget.move(event.pos())
 
         self.resize(1000, 800)
         sidebar = QtWidgets.QWidget()
