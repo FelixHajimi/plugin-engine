@@ -183,6 +183,7 @@ class API:
         messageWidget = QtWidgets.QWidget()
         messageWidget.setStyleSheet("padding: 5px;border-radius: 10px;")
         messageLayout = QtWidgets.QVBoxLayout(messageWidget)
+
         label = QtWidgets.QLabel()
         label.mousePressEvent = lambda _: clickedFunc()
         if level == 0:
@@ -198,14 +199,17 @@ class API:
             label.setStyleSheet("background-color: #fe534c")
             label.setText("❌ " + text)
         messageLayout.addWidget(label)
+
         if customWidget:
             messageLayout.addWidget(customWidget)
+
         window.messageLayout.addWidget(messageWidget)
+
         timer = QtCore.QTimer(messageWidget, singleShot=True)
         timer.timeout.connect(messageWidget.deleteLater)
         timer.start(delay)
-        messageWidget.enterEvent = timer.stop
-        messageWidget.leaveEvent = timer.start(delay)
+        messageWidget.enterEvent = lambda _: timer.stop()
+        messageWidget.leaveEvent = lambda _: timer.start(delay)
 
 
 class Translation:
