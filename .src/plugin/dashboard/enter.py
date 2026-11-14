@@ -1,12 +1,12 @@
 from PySide6 import QtWidgets, QtCore
 import time
-import types
+import typing
 
 
 class API:
     pluginId: str
 
-    def addUpdateFunc(self, func: types.MethodType, delay: int): ...
+    def addUpdateFunc(self, func: typing.Callable, delay: int): ...
 
 
 class Window(QtWidgets.QWidget):
@@ -44,7 +44,7 @@ class Window(QtWidgets.QWidget):
 
         self.setLayout(self.mainLayout)
 
-        self.api.addUpdateFunc(self.updateTime, 1)
+        self.api.addUpdateFunc(self.updateTime, 0.5)
 
     @QtCore.Slot(dict)
     def onReceive(self, data: dict):
