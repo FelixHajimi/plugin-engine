@@ -19,7 +19,7 @@ __version__ = "pre-0.0"
 # Methods
 ## Data Class
 @dataclass
-class SidebarDataKeys:
+class SidebarButtonData:
     text: str | None
     func: typing.Callable | None = lambda: None
     group: str | None = None
@@ -74,10 +74,10 @@ class FuncItem:
 
 
 ## Program Built-in Methods
-def createSidebar(sidebar: QtWidgets.QWidget, data: list[SidebarDataKeys | str]):
+def createSidebar(sidebar: QtWidgets.QWidget, data: list[SidebarButtonData | str]):
     layout = QtWidgets.QVBoxLayout(sidebar)
     for item in data:
-        if type(item) is str:
+        if isinstance(item, str):
             if item == "-":
                 line = QtWidgets.QFrame()
                 line.setFrameShape(QtWidgets.QFrame.Shape.HLine)
@@ -85,7 +85,7 @@ def createSidebar(sidebar: QtWidgets.QWidget, data: list[SidebarDataKeys | str])
         else:
             btn = QtWidgets.QPushButton()
             btn.setText(item.text)
-            btn.setObjectName(f"sidebar_{item.text}")
+            btn.setProperty("class", "button")
             if item.group is not None:
                 btn.setProperty("group", item.group)
             btn.clicked.connect(item.func)
@@ -218,7 +218,7 @@ fileStructure = {
         "temp": {"_type": "folder"},
         "setting.json": {
             "_type": "file",
-            "content": '{"meta": {"description": "Provide settings for the page","allowRead": ["*"],"allowWrite": []},"content": {}}',
+            "_content": '{"meta": {"description": "Provide settings for the page","allowRead": ["*"],"allowWrite": []},"content": {}}',
         },
     },
     "logs": {"_type": "folder"},
@@ -520,10 +520,6 @@ class Window(QtWidgets.QMainWindow):
         sidebar.setObjectName("sidebar")
         sidebar.setStyleSheet("""
 #sidebar {border-right: 1px solid black;}
-QPushButton {border: none;border-radius: 6px;background-color: rgba(0, 0, 0, 12);color: #333;padding: 6px 10px;}
-QPushButton:hover {background-color: rgba(0, 0, 0, 25);}
-QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
-
 *[group=text] {
     background-color: rgba(0, 0, 0, 0);
     font-size: 16px;
@@ -597,7 +593,7 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
 
                     pageWidget.addTab(pluginWindow, config.name[language])
                     pluginButtons.append(
-                        SidebarDataKeys(
+                        SidebarButtonData(
                             config.name[language],
                             lambda _, name=config.name[language]: setPage(
                                 name, pageWidget
@@ -638,11 +634,11 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
             sidebar,
             [
                 *pluginButtons,
-                SidebarDataKeys(
+                SidebarButtonData(
                     tran.exec("setting"),
                     lambda: setPage(tran.exec("setting"), pageWidget),
                 ),
-                SidebarDataKeys(f"v{__version__}", group="text"),
+                SidebarButtonData(f"v {__version__}", group="text"),
             ],
         )
         setPage(setting["content"]["general.firstPage"]["value"], pageWidget)
@@ -665,88 +661,89 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
                 funcItem.startTime = nowTime
 
 
-app = QtWidgets.QApplication(sys.argv)
-app.setStyleSheet("""
-/* Button: Basic */
-*[class=button] {
-    border-radius: 10px;
-    background-color: rgba(0, 0, 0, 12);
-    padding: 10px;
-}
-*[class=button]:hover {
-    background-color: rgba(0, 0, 0, 25);
-}
-*[class=button]:pressed {
-    background-color: rgba(0, 0, 0, 45);
-}
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    app.setStyleSheet("""
+    /* Button: Basic */
+    *[class=button] {
+        border-radius: 10px;
+        background-color: rgba(0, 0, 0, 12);
+        padding: 10px;
+    }
+    *[class=button]:hover {
+        background-color: rgba(0, 0, 0, 25);
+    }
+    *[class=button]:pressed {
+        background-color: rgba(0, 0, 0, 45);
+    }
 
-/* Button: Primary */
-*[class=button][type=primary] {
-    background-color: #0095FF;
-    color: #FFFFFF;
-}
-*[class=button][type=primary]:hover {
-    background-color: #33AAFF;
-}
-*[class=button][type=primary]:pressed {
-    background-color: #007ACC;
-}
+    /* Button: Primary */
+    *[class=button][type=primary] {
+        background-color: #0095FF;
+        color: #FFFFFF;
+    }
+    *[class=button][type=primary]:hover {
+        background-color: #33AAFF;
+    }
+    *[class=button][type=primary]:pressed {
+        background-color: #007ACC;
+    }
 
-/* Button: Danger */
-*[class=button][type=danger] {
-    background-color: rgba(255, 59, 48, 15);
-    color: #FF3B30;
-}
-*[class=button][type=danger]:hover {
-    background-color: rgba(255, 59, 48, 30);
-}
-*[class=button][type=danger]:pressed {
-    background-color: rgba(255, 59, 48, 45);
-}
+    /* Button: Danger */
+    *[class=button][type=danger] {
+        background-color: rgba(255, 59, 48, 15);
+        color: #FF3B30;
+    }
+    *[class=button][type=danger]:hover {
+        background-color: rgba(255, 59, 48, 30);
+    }
+    *[class=button][type=danger]:pressed {
+        background-color: rgba(255, 59, 48, 45);
+    }
 
-/* Button: Disabled */
-*[class=button]:disabled {
-    background-color: rgba(0, 0, 0, 6);
-    color: rgba(0, 0, 0, 100);
-}
+    /* Button: Disabled */
+    *[class=button]:disabled {
+        background-color: rgba(0, 0, 0, 6);
+        color: rgba(0, 0, 0, 100);
+    }
 
-/* Text */
-*[class=text][type=title] {
-    font-size: 18px;
-    font-weight: bold;
-    color: #1F1F1F;
-}
-*[class=text][type=subtitle] {
-    font-size: 14px;
-    color: #666666;
-}
-*[class=text][type=body] {
-    font-size: 13px;
-    color: #333333;
-}
-*[class=text][type=hint] {
-    font-size: 12px;
-    color: #999999;
-}
+    /* Text */
+    *[class=text][type=title] {
+        font-size: 18px;
+        font-weight: bold;
+        color: #1F1F1F;
+    }
+    *[class=text][type=subtitle] {
+        font-size: 14px;
+        color: #666666;
+    }
+    *[class=text][type=body] {
+        font-size: 13px;
+        color: #333333;
+    }
+    *[class=text][type=hint] {
+        font-size: 12px;
+        color: #999999;
+    }
 
-/* Input */
-*[class=input] {
-    border: 1px solid #DDDDDD;
-    border-radius: 8px;
-    padding: 8px 10px;
-    background-color: #FFFFFF;
-}
-*[class=input]:focus {
-    border: 1px solid #0095FF;
-}
+    /* Input */
+    *[class=input] {
+        border: 1px solid #DDDDDD;
+        border-radius: 8px;
+        padding: 8px 10px;
+        background-color: #FFFFFF;
+    }
+    *[class=input]:focus {
+        border: 1px solid #0095FF;
+    }
 
-/* Card container */
-*[class=card] {
-    background-color: #FFFFFF;
-    border: 1px solid #EEEEEE;
-    border-radius: 10px;
-}
-""")
-window = Window()
-window.show()
-sys.exit(app.exec())
+    /* Card container */
+    *[class=card] {
+        background-color: #FFFFFF;
+        border: 1px solid #EEEEEE;
+        border-radius: 10px;
+    }
+    """)
+    window = Window()
+    window.show()
+    sys.exit(app.exec())
