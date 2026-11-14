@@ -1,0 +1,14 @@
+{
+  "id": "timeline",
+  "version": "0.1.0",
+  "main": "enter.py",
+  "name": {
+    "zh-cn": "时间表",
+    "en-us": "Timeline"
+  },
+  "author": "Felix",
+  "description": {
+    "zh-cn": "教室作息时间表，常驻仪表盘侧边栏，到点变色并提示音提醒",
+    "en-us": "Classroom timeline on the dashboard sidebar, flashes and beeps when a time is reached."
+  }
+}
