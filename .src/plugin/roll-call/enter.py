@@ -1,5 +1,6 @@
 from PySide6 import QtWidgets, QtCore, QtGui
 import random
+import typing
 
 
 class API:
@@ -9,11 +10,14 @@ class API:
 
 
 class Translation:
-    languageMap: dict[str, dict[str, str]]
+    languageMap: dict[str, dict[str, typing.Any]]
     language: str
 
-    def __init__(self, languageMap: dict[str, dict[str, str]], language: str): ...
-    def exec(self, key: str, fallback: str = "") -> str: ...
+    def __init__(
+        self, languageMap: dict[str, dict[str, typing.Any]], language: str
+    ): ...
+
+    def exec(self, key: str, fallback: str = "") -> typing.Any: ...
 
 
 class Window(QtWidgets.QWidget):
@@ -24,56 +28,23 @@ class Window(QtWidgets.QWidget):
         self.tran: Translation
 
     def initUI(self):
-        self.setStyleSheet("""
-QLabel {
-    font-size: 14px;
-    color: #333;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    padding: 6px;
-}
-QListWidget {
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    padding:4px;
-    background: #ffffff;
-}
-QListWidget::item {
-    padding:4px;
-}
-QPushButton {
-    border: none;
-    background-color: #e5e7eb;
-    color: #1f2937;
-    border-radius: 6px;
-    font-size:14px;
-}
-QPushButton:hover {
-    background-color: #d1d5db;
-}
-QPushButton:pressed {
-    background-color: #9ca3af;
-}
-QPushButton:disabled {
-    background-color: #f3f4f6;
-    color:#9ca3af;
-}
-""")
-
         self.mainLayout = QtWidgets.QGridLayout()
         self.mainLayout.setSpacing(2)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
 
         # Wait List
         self.waitList = QtWidgets.QListWidget()
+        self.waitList.setProperty("class", "card")
         self.mainLayout.addWidget(self.waitList, 0, 0, 1, 2)
 
         # Called List
         self.calledList = QtWidgets.QListWidget()
+        self.calledList.setProperty("class", "card")
         self.mainLayout.addWidget(self.calledList, 1, 0, 1, 2)
 
         # Message Label
         self.messageLabel = QtWidgets.QLabel()
+        self.messageLabel.setProperty("class", "card")
         self.messageLabel.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
             QtWidgets.QSizePolicy.Policy.Expanding,
@@ -91,6 +62,7 @@ QPushButton:disabled {
         self.mainLayout.setRowMinimumHeight(3, 50)
 
         self.importButton = QtWidgets.QPushButton()
+        self.importButton.setProperty("class", "button")
         self.importButton.setText(self.tran.exec("button.importList"))
         self.importButton.setSizePolicy(policy)
 
@@ -108,6 +80,7 @@ QPushButton:disabled {
         self.mainLayout.addWidget(self.importButton, 3, 0, 1, 1)
 
         self.resetButton = QtWidgets.QPushButton()
+        self.resetButton.setProperty("class", "button")
         self.resetButton.setText(self.tran.exec("button.reset"))
         self.resetButton.setSizePolicy(policy)
 
@@ -120,6 +93,7 @@ QPushButton:disabled {
         self.mainLayout.addWidget(self.resetButton, 3, 1, 1, 1)
 
         self.randomPickButton = QtWidgets.QPushButton()
+        self.randomPickButton.setProperty("class", "button")
         self.randomPickButton.setText(self.tran.exec("button.randomPick"))
         self.randomPickButton.setSizePolicy(policy)
 
@@ -141,6 +115,7 @@ QPushButton:disabled {
         self.mainLayout.addWidget(self.randomPickButton, 3, 2, 1, 1)
 
         self.cancelButton = QtWidgets.QPushButton()
+        self.cancelButton.setProperty("class", "button")
         self.cancelButton.setText(self.tran.exec("button.cancel"))
         self.cancelButton.setSizePolicy(policy)
 
