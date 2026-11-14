@@ -13,7 +13,7 @@ import time
 # Program Information
 __author__ = "FelixHajimi"
 __description__ = "Plugin Engine"
-__version__ = "pre-0.0"
+__version__ = "re-0.0"
 
 
 # Methods
