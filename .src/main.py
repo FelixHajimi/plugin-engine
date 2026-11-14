@@ -10,12 +10,14 @@ import json
 import logging
 import time
 
+# Program Information
 __author__ = "FelixHajimi"
 __description__ = "Plugin Engine"
 __version__ = "pre-0.0"
 
 
-# Data Structures
+# Methods
+## Data Class
 @dataclass
 class SidebarDataKeys:
     text: str | None
@@ -41,7 +43,7 @@ class DataFileFormat:
         allowRead: list[str]
         allowWrite: list[str]
 
-        def get_dict(self):
+        def getDict(self):
             return {
                 "description": self.description,
                 "allowRead": self.allowRead,
@@ -54,8 +56,8 @@ class DataFileFormat:
     def __post_init__(self):
         self.meta = self.Meta(**self.meta)
 
-    def get_dict(self):
-        return {"meta": self.meta.get_dict(), "content": self.content}
+    def getDict(self):
+        return {"meta": self.meta.getDict(), "content": self.content}
 
 
 @dataclass
@@ -71,7 +73,7 @@ class FuncItem:
     startTime: float
 
 
-# Program Built-in Methods
+## Program Built-in Methods
 def createSidebar(sidebar: QtWidgets.QWidget, data: list[SidebarDataKeys | str]):
     layout = QtWidgets.QVBoxLayout(sidebar)
     for item in data:
@@ -112,6 +114,192 @@ def setPage(key: str, tabWidget: QtWidgets.QTabWidget):
             tabWidget.setCurrentIndex(index)
 
 
+## Plugin Methods
+class API:
+    def __init__(self, pluginId: str):
+        self.pluginId = pluginId
+
+    def readFile(self, id: str, encoding: str = "utf-8"):
+        if "../" in id or "..\\" in id:
+            return None
+        try:
+            with open(f"data/{id}.json", "r", encoding=encoding) as f:
+                data = json.load(f)
+                data = DataFileFormat(**data)
+        except FileNotFoundError as error:
+            logging.error(eval(tran.exec("log.error.readFileNotFound")), exc_info=True)
+            return None
+        except json.JSONDecodeError as error:
+            logging.error(eval(tran.exec("log.error.readFileBadJson")), exc_info=True)
+            return None
+
+        if self.pluginId in data.meta.allowRead or "*" in data.meta.allowRead:
+            return data.content
+        else:
+            return None
+
+    def writeFile(self, id: str, _object, encoding: str = "utf-8"):
+        if "../" in id or "..\\" in id:
+            return None
+        try:
+            with open(f"data/{id}.json", "r", encoding=encoding) as f:
+                data = json.load(f)
+                data = DataFileFormat(**data)
+        except FileNotFoundError as error:
+            logging.error(eval(tran.exec("log.error.readFileNotFound")), exc_info=True)
+            return None
+        except json.JSONDecodeError as error:
+            logging.error(eval(tran.exec("log.error.readFileBadJson")), exc_info=True)
+            return None
+
+        if self.pluginId in data.meta.allowWrite or "*" in data.meta.allowWrite:
+            try:
+                tempPath = f"data/temp/{id}.json"
+                with open(tempPath, "w", encoding=encoding) as f:
+                    data.content = _object
+                    json.dump(data.getDict(), f, ensure_ascii=False)
+                os.replace(tempPath, f"data/{id}.json")
+            except OSError as error:
+                logging.error(
+                    eval(tran.exec("log.error.writeFileFailed")), exc_info=True
+                )
+                return None
+            except TypeError as error:
+                logging.error(
+                    eval(tran.exec("log.error.writeBadObject")), exc_info=True
+                )
+                return None
+        else:
+            logging.error(eval(tran.exec("log.error.noWritePermission")), exc_info=True)
+            return None
+
+    def addUpdateFunc(self, func: typing.Callable, duration: int):
+        GV.updateFuncs.append(FuncItem(func, duration, time.monotonic()))
+
+    def showMessage(
+        self,
+        text: str,
+        level: int = 0,
+        duration: int = 3000,
+        clickedFunc: typing.Callable | None = None,
+        customWidget: QtWidgets.QWidget | None = None,
+    ):
+        messageList = GV.messageList
+        if messageList is None:
+            logging.warning(f"message list is not ready, message dropped: {text}")
+            return
+        messageList.addCard(text, level, duration, clickedFunc, customWidget)
+
+
+class Translation:
+    def __init__(self, languageMap: dict[str, dict[str, typing.Any]], language: str):
+        self.languageMap = languageMap
+        self.language = language
+
+    def exec(self, key: str, fallback: str = "") -> typing.Any:
+        try:
+            if self.language not in self.languageMap:
+                if "en-us" not in self.languageMap:
+                    return fallback
+                else:
+                    return self.languageMap["en-us"][key]
+            else:
+                return self.languageMap[self.language][key]
+        except KeyError:
+            return fallback
+
+
+# Init
+## Create Files
+fileStructure = {
+    "plugin": {"_type": "folder"},
+    "data": {
+        "_type": "folder",
+        "temp": {"_type": "folder"},
+        "setting.json": {
+            "_type": "file",
+            "content": '{"meta": {"description": "Provide settings for the page","allowRead": ["*"],"allowWrite": []},"content": {}}',
+        },
+    },
+    "logs": {"_type": "folder"},
+}
+createFiles(fileStructure)
+
+## Log
+logFiles = os.listdir("logs")
+while len(logFiles) > 10:
+    os.remove(f"logs/{logFiles[0]}")
+    logFiles = os.listdir("logs")
+
+handlerFormatter = logging.Formatter(
+    "[%(levelname)s]<%(pathname)s>(%(asctime)s)\n%(message)s\n"
+)
+
+startTimeHandler = logging.FileHandler(
+    f"logs/{time.strftime("%Y-%m-%d-%H-%M", time.localtime())}.log", encoding="utf-8"
+)
+startTimeHandler.setFormatter(handlerFormatter)
+startTimeHandler.setLevel(logging.WARN)
+
+lastHandler = logging.FileHandler("logs/last.log", "w", encoding="utf-8")
+lastHandler.setFormatter(handlerFormatter)
+lastHandler.setLevel(logging.DEBUG)
+
+logger = logging.getLogger()
+logger.addHandler(startTimeHandler)
+logger.addHandler(lastHandler)
+logger.setLevel(logging.DEBUG)
+
+## Setting And Language
+with open(f"data/setting.json", "r", encoding="utf-8") as f:
+    setting = json.load(f)
+    language = setting["content"]["general.language"]["value"]
+    languageMap = {
+        "zh-cn": {
+            "setting": "设置",
+            "log.error.pluginBadZip": 'f"插件 {file}: zip 损坏或不是有效压缩包"',
+            "log.error.pluginNoAccess": 'f"插件 {file}: 文件不存在或无权读取"',
+            "log.error.pluginMissingFile": 'f"插件 {file}: zip 内缺少必需文件(config.json / 入口文件)"',
+            "log.error.pluginBadJson": 'f"插件 {file}: 文件编码或 JSON 格式错误"',
+            "log.error.pluginBadConfig": 'f"插件 {file}: config.json 字段缺失或类型不符"',
+            "log.error.pluginCodeError": 'f"插件 {file}: 插件代码语法错误或缺 Window/onReceive"',
+            "log.error.pluginUnknown": 'f"插件 {file}: 未知错误 {type(error).__name__}: {error}"',
+            "log.error.readFileNotFound": 'f"数据文件 {id} 不存在"',
+            "log.error.readFileBadJson": 'f"数据文件 {id}: JSON 格式错误"',
+            "log.error.writeFileFailed": 'f"写入数据文件 {id} 失败: {error}"',
+            "log.error.writeBadObject": 'f"数据文件 {id} 内容不可序列化: {type(error).__name__}"',
+            "log.error.noWritePermission": 'f"插件 {self.pluginId} 无 {id} 的写权限"',
+        },
+        "en-us": {
+            "setting": "Setting",
+            "log.error.pluginBadZip": 'f"Plugin {file}: zip is corrupted or not a valid archive"',
+            "log.error.pluginNoAccess": 'f"Plugin {file}: file missing or no read permission"',
+            "log.error.pluginMissingFile": 'f"Plugin {file}: required file missing in zip (config.json / entry)"',
+            "log.error.pluginBadJson": 'f"Plugin {file}: invalid encoding or JSON format"',
+            "log.error.pluginBadConfig": 'f"Plugin {file}: config.json fields missing or wrong type"',
+            "log.error.pluginCodeError": 'f"Plugin {file}: syntax error or missing Window/onReceive"',
+            "log.error.pluginUnknown": 'f"Plugin {file}: unknown error {type(error).__name__}: {error}"',
+            "log.error.readFileNotFound": 'f"Data file {id} does not exist"',
+            "log.error.readFileBadJson": 'f"Data file {id}: invalid JSON format"',
+            "log.error.writeFileFailed": 'f"Failed to write data file {id}: {error}"',
+            "log.error.writeBadObject": 'f"Data file {id} content is not serializable: {type(error).__name__}"',
+            "log.error.noWritePermission": 'f"Plugin {self.pluginId} has no write permission to {id}"',
+        },
+    }
+
+    tran = Translation(languageMap, language)
+
+
+## Set Global Variables
+class GlobalVariables:
+    updateFuncs: list[FuncItem] = []
+    messageList: "MessageList | None" = None
+
+
+GV = GlobalVariables()
+
+
+## Message
 class MessageCard(QtWidgets.QFrame):
     dismissed = QtCore.Signal(object)
 
@@ -319,191 +507,7 @@ class MessageList(QtCore.QObject):
             y -= self.SPACING
 
 
-# Plugin Methods
-class API:
-    def __init__(self, pluginId: str):
-        self.pluginId = pluginId
-
-    def readFile(self, id: str, encoding: str = "utf-8"):
-        if "../" in id or "..\\" in id:
-            return None
-        try:
-            with open(f"data/{id}.json", "r", encoding=encoding) as f:
-                data = json.load(f)
-                data = DataFileFormat(**data)
-        except FileNotFoundError as error:
-            logging.error(eval(tran.exec("log.error.readFileNotFound")), exc_info=True)
-            return None
-        except json.JSONDecodeError as error:
-            logging.error(eval(tran.exec("log.error.readFileBadJson")), exc_info=True)
-            return None
-
-        if self.pluginId in data.meta.allowRead or "*" in data.meta.allowRead:
-            return data.content
-        else:
-            return None
-
-    def writeFile(self, id: str, _object, encoding: str = "utf-8"):
-        if "../" in id or "..\\" in id:
-            return None
-        try:
-            with open(f"data/{id}.json", "r", encoding=encoding) as f:
-                data = json.load(f)
-                data = DataFileFormat(**data)
-        except FileNotFoundError as error:
-            logging.error(eval(tran.exec("log.error.readFileNotFound")), exc_info=True)
-            return None
-        except json.JSONDecodeError as error:
-            logging.error(eval(tran.exec("log.error.readFileBadJson")), exc_info=True)
-            return None
-
-        if self.pluginId in data.meta.allowWrite or "*" in data.meta.allowWrite:
-            try:
-                tempPath = f"data/temp/{id}.json"
-                with open(tempPath, "w", encoding=encoding) as f:
-                    data.content = _object
-                    json.dump(data.get_dict(), f, ensure_ascii=False)
-                os.replace(tempPath, f"data/{id}.json")
-            except OSError as error:
-                logging.error(
-                    eval(tran.exec("log.error.writeFileFailed")), exc_info=True
-                )
-                return None
-            except TypeError as error:
-                logging.error(
-                    eval(tran.exec("log.error.writeBadObject")), exc_info=True
-                )
-                return None
-        else:
-            logging.error(eval(tran.exec("log.error.noWritePermission")), exc_info=True)
-            return None
-
-    def addUpdateFunc(self, func: typing.Callable, duration: int):
-        globalVariables.updateFuncs.append(FuncItem(func, duration, time.monotonic()))
-
-    def showMessage(
-        self,
-        text: str,
-        level: int = 0,
-        duration: int = 3000,
-        clickedFunc: typing.Callable | None = None,
-        customWidget: QtWidgets.QWidget | None = None,
-    ):
-        messageList = globalVariables.messageList
-        if messageList is None:
-            logging.warning(f"message list is not ready, message dropped: {text}")
-            return
-        messageList.addCard(text, level, duration, clickedFunc, customWidget)
-
-
-class Translation:
-    def __init__(self, languageMap: dict[str, dict[str, typing.Any]], language: str):
-        self.languageMap = languageMap
-        self.language = language
-
-    def exec(self, key: str, fallback: str = "") -> typing.Any:
-        try:
-            if self.language not in self.languageMap:
-                if "en-us" not in self.languageMap:
-                    return fallback
-                else:
-                    return self.languageMap["en-us"][key]
-            else:
-                return self.languageMap[self.language][key]
-        except KeyError:
-            return fallback
-
-
-# Init
-## Create Files
-fileStructure = {
-    "plugin": {"_type": "folder"},
-    "data": {
-        "_type": "folder",
-        "temp": {"_type": "folder"},
-        "setting.json": {
-            "_type": "file",
-            "content": '{"meta": {"description": "Provide settings for the page","allowRead": ["*"],"allowWrite": []},"content": {}}',
-        },
-    },
-    "logs": {"_type": "folder"},
-}
-createFiles(fileStructure)
-
-## Log
-logFiles = os.listdir("logs")
-while len(logFiles) > 10:
-    os.remove(f"logs/{logFiles[0]}")
-    logFiles = os.listdir("logs")
-
-handlerFormatter = logging.Formatter(
-    "[%(levelname)s]<%(pathname)s>(%(asctime)s)\n%(message)s\n"
-)
-
-startTimeHandler = logging.FileHandler(
-    f"logs/{time.strftime("%Y-%m-%d-%H-%M", time.localtime())}.log", encoding="utf-8"
-)
-startTimeHandler.setFormatter(handlerFormatter)
-startTimeHandler.setLevel(logging.WARN)
-
-lastHandler = logging.FileHandler("logs/last.log", "w", encoding="utf-8")
-lastHandler.setFormatter(handlerFormatter)
-lastHandler.setLevel(logging.DEBUG)
-
-logger = logging.getLogger()
-logger.addHandler(startTimeHandler)
-logger.addHandler(lastHandler)
-logger.setLevel(logging.DEBUG)
-
-## Setting And Language
-with open(f"data/setting.json", "r", encoding="utf-8") as f:
-    setting = json.load(f)
-    language = setting["content"]["general.language"]["value"]
-    languageMap = {
-        "zh-cn": {
-            "setting": "设置",
-            "log.error.pluginBadZip": 'f"插件 {file}: zip 损坏或不是有效压缩包"',
-            "log.error.pluginNoAccess": 'f"插件 {file}: 文件不存在或无权读取"',
-            "log.error.pluginMissingFile": 'f"插件 {file}: zip 内缺少必需文件(config.json / 入口文件)"',
-            "log.error.pluginBadJson": 'f"插件 {file}: 文件编码或 JSON 格式错误"',
-            "log.error.pluginBadConfig": 'f"插件 {file}: config.json 字段缺失或类型不符"',
-            "log.error.pluginCodeError": 'f"插件 {file}: 插件代码语法错误或缺 Window/onReceive"',
-            "log.error.pluginUnknown": 'f"插件 {file}: 未知错误 {type(error).__name__}: {error}"',
-            "log.error.readFileNotFound": 'f"数据文件 {id} 不存在"',
-            "log.error.readFileBadJson": 'f"数据文件 {id}: JSON 格式错误"',
-            "log.error.writeFileFailed": 'f"写入数据文件 {id} 失败: {error}"',
-            "log.error.writeBadObject": 'f"数据文件 {id} 内容不可序列化: {type(error).__name__}"',
-            "log.error.noWritePermission": 'f"插件 {self.pluginId} 无 {id} 的写权限"',
-        },
-        "en-us": {
-            "setting": "Setting",
-            "log.error.pluginBadZip": 'f"Plugin {file}: zip is corrupted or not a valid archive"',
-            "log.error.pluginNoAccess": 'f"Plugin {file}: file missing or no read permission"',
-            "log.error.pluginMissingFile": 'f"Plugin {file}: required file missing in zip (config.json / entry)"',
-            "log.error.pluginBadJson": 'f"Plugin {file}: invalid encoding or JSON format"',
-            "log.error.pluginBadConfig": 'f"Plugin {file}: config.json fields missing or wrong type"',
-            "log.error.pluginCodeError": 'f"Plugin {file}: syntax error or missing Window/onReceive"',
-            "log.error.pluginUnknown": 'f"Plugin {file}: unknown error {type(error).__name__}: {error}"',
-            "log.error.readFileNotFound": 'f"Data file {id} does not exist"',
-            "log.error.readFileBadJson": 'f"Data file {id}: invalid JSON format"',
-            "log.error.writeFileFailed": 'f"Failed to write data file {id}: {error}"',
-            "log.error.writeBadObject": 'f"Data file {id} content is not serializable: {type(error).__name__}"',
-            "log.error.noWritePermission": 'f"Plugin {self.pluginId} has no write permission to {id}"',
-        },
-    }
-
-    tran = Translation(languageMap, language)
-
-
-## Set Global Variables
-class GlobalVariables:
-    updateFuncs: list[FuncItem] = []
-    messageList: "MessageList | None" = None
-
-
-globalVariables = GlobalVariables()
-
-
+# Main Window
 class Window(QtWidgets.QMainWindow):
     signal = QtCore.Signal(dict)
 
@@ -531,7 +535,7 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
         pageWidget.setStyleSheet("#pageWidget {background: white;}")
 
         self.messageList = MessageList(pageWidget)
-        globalVariables.messageList = self.messageList
+        GV.messageList = self.messageList
         pageWidget.currentChanged.connect(lambda *_: self.messageList.relayout())
 
         pageWidget.addTab(settingPage.Setting(), tran.exec("setting"))
@@ -655,7 +659,7 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
 
     def mainTimerFunc(self):
         nowTime = time.monotonic()
-        for funcItem in globalVariables.updateFuncs:
+        for funcItem in GV.updateFuncs:
             if nowTime - funcItem.startTime >= funcItem.duration:
                 funcItem.func()
                 funcItem.startTime = nowTime
