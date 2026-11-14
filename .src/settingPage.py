@@ -1,6 +1,7 @@
 from PySide6 import QtWidgets, QtCore, QtGui
 import typing
 import json
+import os
 
 
 def createSettings(
@@ -349,5 +350,6 @@ QPushButton:hover{
             return result
 
         setting["content"] = collectConfig(self.data)
-        with open("data/setting.json", "w", encoding="utf-8") as f:
+        with open("data/temp/setting.json", "w", encoding="utf-8") as f:
             json.dump(setting, f, ensure_ascii=False, indent=4)
+        os.replace("data/temp/setting.json", "data/setting.json")
