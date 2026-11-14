@@ -32,7 +32,3 @@ The directories are generated on first run. Drop a plugin zip into `plugin/` and
 
 - [English docs](docs/en-us/)
 - [中文文档](docs/zh-cn/)
-
-## License
-
-[MIT License](LICENSE)
