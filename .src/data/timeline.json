@@ -1,0 +1,11 @@
+{
+    "meta": {
+        "description": {
+            "zh-cn": "类似于日程表，可以看到当天的或者某一天的时间点的信息",
+            "en-us": "Similar to a schedule, you can see the information for the time points of the day or a specific day"
+        },
+        "allowRead": ["dashboard", "timeline"],
+        "allowWrite": ["timeline"]
+    },
+    "content": {}
+}
