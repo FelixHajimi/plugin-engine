@@ -1,9 +1,6 @@
 {
     "meta": {
-        "description": {
-            "zh-cn": "示例数据文件",
-            "en-us": "Example data file"
-        },
+        "description": "Example data file",
         "allowRead": ["*"],
         "allowWrite": ["*"]
     },
