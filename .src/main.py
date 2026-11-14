@@ -10,7 +10,9 @@ import json
 import logging
 import time
 
-__version__ = "0.0"
+__author__ = "FelixHajimi"
+__description__ = "Plugin Engine"
+__version__ = "pre-0.0"
 
 
 # Data Structures
@@ -65,7 +67,7 @@ class PluginWindow:
 @dataclass
 class FuncItem:
     func: typing.Callable
-    delay: int
+    duration: int
     startTime: float
 
 
@@ -110,6 +112,213 @@ def setPage(key: str, tabWidget: QtWidgets.QTabWidget):
             tabWidget.setCurrentIndex(index)
 
 
+class MessageCard(QtWidgets.QFrame):
+    dismissed = QtCore.Signal(object)
+
+    STYLE_MAP = (
+        ("#37FF00", "#1F1F1F", "🔧"),
+        ("#0DADF9", "#FFFFFF", "📄"),
+        ("#FFE800", "#1F1F1F", "⚠"),
+        ("#FE534C", "#FFFFFF", "❌"),
+    )
+    HPADDING, VPADDING = 12, 8
+    closing = False
+    fadeInDone = False
+    fadeMode = ""
+
+    def __init__(
+        self,
+        parent: QtWidgets.QWidget,
+        text: str,
+        level: int,
+        clickedFunc: typing.Callable,
+        customWidget: QtWidgets.QWidget | None,
+        duration: int,
+        textWidth: int,
+    ):
+        super().__init__(parent)
+        self.setObjectName("messageCard")
+        self.clickedFunc = clickedFunc
+
+        effectiveIndex = min(max(level, 0), len(self.STYLE_MAP) - 1)
+        background, foreground, icon = self.STYLE_MAP[effectiveIndex]
+        self.setStyleSheet(f"""
+#messageCard {{
+    background-color: {background};
+    border-radius: 10px;
+}}
+""")
+        if clickedFunc is not None:
+            self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
+
+        content = f"{icon} {text}"
+        self.textLabel = QtWidgets.QLabel(self)
+        self.textLabel.setText(content)
+        self.textLabel.setWordWrap(True)
+        self.textLabel.setStyleSheet(
+            f"color: {foreground}; background-color: transparent;"
+        )
+        self.textLabel.setAttribute(
+            QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents, True
+        )
+        metrics = self.textLabel.fontMetrics()
+        naturalWidth = metrics.horizontalAdvance(content)
+        labelWidth = naturalWidth + 4 if naturalWidth <= textWidth else textWidth
+        self.textLabel.setFixedWidth(labelWidth)
+        labelHeight = self.textLabel.heightForWidth(labelWidth)
+        if labelHeight <= 0:
+            labelHeight = metrics.height()
+        self.textLabel.setFixedHeight(max(labelHeight, metrics.height()))
+
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        self.mainLayout.setContentsMargins(
+            self.HPADDING, self.VPADDING, self.HPADDING, self.VPADDING
+        )
+        self.mainLayout.setSpacing(6)
+        self.mainLayout.addWidget(self.textLabel)
+
+        if customWidget is not None:
+            customWidget.setParent(self)
+            self.mainLayout.addWidget(customWidget)
+
+        self.adjustSize()
+
+        self.timer = QtCore.QTimer(self)
+        self.timer.setSingleShot(True)
+        self.timer.timeout.connect(self.onTimeout)
+
+        self.opacity = QtWidgets.QGraphicsOpacityEffect(self)
+        self.opacity.setOpacity(0.0)
+        self.setGraphicsEffect(self.opacity)
+        self.fade = QtCore.QPropertyAnimation(self.opacity, b"opacity", self)
+        self.fade.finished.connect(self.onFadeFinished)
+
+        if duration > 0:
+            self.timer.start(duration)
+
+    def onTimeout(self):
+        if self.underMouse():
+            return
+        self.dismiss()
+
+    def onFadeFinished(self):
+        if self.fadeMode == "out":
+            self.hide()
+            self.dismissed.emit(self)
+
+    def fadeTo(self, mode: str, value: float, duration: int):
+        self.fadeMode = mode
+        self.fade.stop()
+        self.fade.setDuration(duration)
+        self.fade.setStartValue(self.opacity.opacity())
+        self.fade.setEndValue(value)
+        self.fade.start()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not self.fadeInDone and not self.closing:
+            self.fadeInDone = True
+            self.fadeTo("in", 1.0, 200)
+
+    def enterEvent(self, event):
+        super().enterEvent(event)
+        self.timer.stop()
+
+    def leaveEvent(self, event):
+        super().leaveEvent(event)
+        if not self.closing and self.timer.interval() > 0:
+            self.timer.start()
+
+    def mousePressEvent(self, event):
+        if event.button() == QtCore.Qt.MouseButton.LeftButton and self.clickedFunc:
+            try:
+                self.clickedFunc()
+            except Exception:
+                logging.error("message click callback failed", exc_info=True)
+        super().mousePressEvent(event)
+
+    def dismiss(self, animate: bool = True):
+        if self.closing:
+            return
+        self.closing = True
+        self.timer.stop()
+        if animate:
+            self.fadeTo("out", 0.0, 200)
+        else:
+            self.hide()
+            self.dismissed.emit(self)
+
+
+class MessageList(QtCore.QObject):
+    MARGIN = 16
+    SPACING = 8
+    MAX_COUNT = 5
+    MAX_TEXT_WIDTH = 360
+
+    def __init__(self, host: QtWidgets.QWidget):
+        super().__init__(host)
+        self.host = host
+        self.cards: list[MessageCard] = []
+        host.installEventFilter(self)
+
+    def eventFilter(self, watched, event):
+        if watched is self.host and event.type() in (
+            QtCore.QEvent.Type.Resize,
+            QtCore.QEvent.Type.Show,
+        ):
+            self.relayout()
+        return False
+
+    def addCard(
+        self,
+        text: str,
+        level: int = 0,
+        duration: int = 3000,
+        clickedFunc: typing.Callable | None = None,
+        customWidget: QtWidgets.QWidget | None = None,
+    ):
+        while len(self.cards) >= self.MAX_COUNT:
+            oldest = self.cards[0]
+            if oldest.closing:
+                self.cards.pop(0)
+                continue
+            oldest.dismiss(False)
+
+        card = MessageCard(
+            self.host,
+            text,
+            level,
+            clickedFunc,
+            customWidget,
+            duration,
+            self.textWidth(),
+        )
+        card.dismissed.connect(self.onDismissed)
+        self.cards.append(card)
+        card.show()
+        self.relayout()
+
+    def textWidth(self):
+        room = self.host.width() - 2 * self.MARGIN - 2 * MessageCard.HPADDING
+        return max(120, min(self.MAX_TEXT_WIDTH, room))
+
+    def onDismissed(self, card: MessageCard):
+        if card in self.cards:
+            self.cards.remove(card)
+        card.deleteLater()
+        self.relayout()
+
+    def relayout(self):
+        right = self.host.width() - self.MARGIN
+        bottom = self.host.height() - self.MARGIN
+        y = bottom
+        for card in reversed(self.cards):
+            y -= card.height()
+            card.move(max(self.MARGIN, right - card.width()), y)
+            card.raise_()
+            y -= self.SPACING
+
+
 # Plugin Methods
 class API:
     def __init__(self, pluginId: str):
@@ -134,7 +343,7 @@ class API:
         else:
             return None
 
-    def writeFile(self, id: str, _object: typing.Any, encoding: str = "utf-8"):
+    def writeFile(self, id: str, _object, encoding: str = "utf-8"):
         if "../" in id or "..\\" in id:
             return None
         try:
@@ -169,47 +378,22 @@ class API:
             logging.error(eval(tran.exec("log.error.noWritePermission")), exc_info=True)
             return None
 
-    def addUpdateFunc(self, func: typing.Callable, delay: int):
-        globalVariables.updateFuncs.append(FuncItem(func, delay, time.monotonic()))
+    def addUpdateFunc(self, func: typing.Callable, duration: int):
+        globalVariables.updateFuncs.append(FuncItem(func, duration, time.monotonic()))
 
     def showMessage(
         self,
         text: str,
         level: int = 0,
-        delay: int = 3000,
-        clickedFunc: typing.Callable = lambda: None,
+        duration: int = 3000,
+        clickedFunc: typing.Callable | None = None,
         customWidget: QtWidgets.QWidget | None = None,
     ):
-        messageWidget = QtWidgets.QWidget()
-        messageWidget.setStyleSheet("padding: 5px;border-radius: 10px;")
-        messageLayout = QtWidgets.QVBoxLayout(messageWidget)
-
-        label = QtWidgets.QLabel()
-        label.mousePressEvent = lambda _: clickedFunc()
-        if level == 0:
-            label.setStyleSheet("background-color: #37ff00")
-            label.setText("🔧 " + text)
-        elif level == 1:
-            label.setStyleSheet("background-color: #0dadf9")
-            label.setText("📄 " + text)
-        elif level == 2:
-            label.setStyleSheet("background-color: #ffe800")
-            label.setText("⚠ " + text)
-        elif level == 3:
-            label.setStyleSheet("background-color: #fe534c")
-            label.setText("❌ " + text)
-        messageLayout.addWidget(label)
-
-        if customWidget:
-            messageLayout.addWidget(customWidget)
-
-        window.messageLayout.addWidget(messageWidget)
-
-        timer = QtCore.QTimer(messageWidget, singleShot=True)
-        timer.timeout.connect(messageWidget.deleteLater)
-        timer.start(delay)
-        messageWidget.enterEvent = lambda _: timer.stop()
-        messageWidget.leaveEvent = lambda _: timer.start(delay)
+        messageList = globalVariables.messageList
+        if messageList is None:
+            logging.warning(f"message list is not ready, message dropped: {text}")
+            return
+        messageList.addCard(text, level, duration, clickedFunc, customWidget)
 
 
 class Translation:
@@ -314,6 +498,7 @@ with open(f"data/setting.json", "r", encoding="utf-8") as f:
 ## Set Global Variables
 class GlobalVariables:
     updateFuncs: list[FuncItem] = []
+    messageList: "MessageList | None" = None
 
 
 globalVariables = GlobalVariables()
@@ -345,14 +530,9 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
         pageWidget.setObjectName("pageWidget")
         pageWidget.setStyleSheet("#pageWidget {background: white;}")
 
-        messageWidget = QtWidgets.QWidget(pageWidget)
-        messageWidget.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
-        self.messageLayout = QtWidgets.QVBoxLayout(messageWidget)
-        self.messageLayout.setAlignment(
-            QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignRight
-        )
-        pageWidget.resizeEvent = lambda event: messageWidget.resize(event.size())
-        pageWidget.changeEvent = lambda _: messageWidget.raise_()
+        self.messageList = MessageList(pageWidget)
+        globalVariables.messageList = self.messageList
+        pageWidget.currentChanged.connect(lambda *_: self.messageList.relayout())
 
         pageWidget.addTab(settingPage.Setting(), tran.exec("setting"))
 
@@ -476,7 +656,7 @@ QPushButton:pressed {background-color: rgba(0, 0, 0, 45);}
     def mainTimerFunc(self):
         nowTime = time.monotonic()
         for funcItem in globalVariables.updateFuncs:
-            if nowTime - funcItem.startTime >= funcItem.delay:
+            if nowTime - funcItem.startTime >= funcItem.duration:
                 funcItem.func()
                 funcItem.startTime = nowTime
 
