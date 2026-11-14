@@ -1,0 +1,14 @@
+{
+    "zh-cn": {
+        "title": "示例插件",
+        "desc": "这是一个用于测试的插件页面。",
+        "toast": "弹一条提示",
+        "toastText": "来自示例插件的消息"
+    },
+    "en-us": {
+        "title": "Example Plugin",
+        "desc": "This is a plugin page for testing.",
+        "toast": "Show a message",
+        "toastText": "Hello from example"
+    }
+}
