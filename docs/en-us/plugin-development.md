@@ -15,23 +15,23 @@ your-plugin/
 
 ```json
 {
-  "id": "example",
-  "version": "0.0",
-  "main": "enter.py",
-  "name": { "zh-cn": "示例", "en-us": "Example" },
-  "author": "FelixHajimi",
-  "description": { "zh-cn": "示例插件", "en-us": "Example plugin" }
+    "id": "example",
+    "version": "0.0",
+    "main": "enter.py",
+    "name": { "zh-cn": "示例", "en-us": "Example" },
+    "author": "FelixHajimi",
+    "description": { "zh-cn": "示例插件", "en-us": "Example plugin" }
 }
 ```
 
-| Field         | Description                                                          |
-| ------------- | -------------------------------------------------------------------- |
-| `id`          | unique plugin id, used for API permission checks                     |
-| `version`     | plugin version                                                       |
-| `main`        | entry file path (relative to the archive root)                       |
+| Field         | Description                                                                   |
+| ------------- | ----------------------------------------------------------------------------- |
+| `id`          | unique plugin id, used for API permission checks                              |
+| `version`     | plugin version                                                                |
+| `main`        | entry file path (relative to the archive root)                                |
 | `name`        | display name, **must** be an i18n mapping containing the current language key |
-| `author`      | author                                                               |
-| `description` | plugin description; string or i18n mapping                           |
+| `author`      | author                                                                        |
+| `description` | plugin description; string or i18n mapping                                    |
 
 `name` is read as `config.name[language]`: a missing current-language key raises `KeyError` and the plugin fails to load.
 
@@ -41,8 +41,8 @@ Provide `language.json` at the archive root to register the plugin's own strings
 
 ```json
 {
-  "zh-cn": { "title": "示例" },
-  "en-us": { "title": "Example" }
+    "zh-cn": { "title": "示例" },
+    "en-us": { "title": "Example" }
 }
 ```
 
@@ -63,7 +63,7 @@ Only the root directory is supported; `.py` files in subdirectories are not regi
 You must define a `Window` class (subclass of `QtWidgets.QWidget`) with `onReceive`:
 
 ```python
-from PySide6 import QtWidgets, QtCore
+from qtpy import QtWidgets, QtCore
 
 class Window(QtWidgets.QWidget):
     def __init__(self):

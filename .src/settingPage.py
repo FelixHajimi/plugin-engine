@@ -1,11 +1,11 @@
-from PySide6 import QtWidgets, QtCore, QtGui
+from qtpy import QtWidgets, QtCore, QtGui
 import typing
 import json
 import os
 
 
 def createSettings(
-    layout: QtWidgets.QFormLayout, data: dict[str, typing.Any], language: str
+    layout: QtWidgets.QFormLayout, data: typing.Dict[str, typing.Any], language: str
 ):
     for key in data:
         if key.startswith("_"):

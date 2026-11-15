@@ -1,6 +1,6 @@
 # Plugin Engine
 
-一个基于 PySide6 的桌面插件引擎。你可以把功能做成一个个独立的插件，丢进程序里就能用，不需要改动主程序。
+一个基于 QT 的桌面插件引擎。你可以把功能做成一个个独立的插件，丢进程序里就能用，不需要改动主程序。
 
 ## 它是什么
 
@@ -23,6 +23,7 @@ Plugin Engine 是一个"宿主 + 插件"结构的桌面应用框架。主程序�
 ```bash
 cd .src
 pip install PySide6
+pip install qtpy
 python main.py
 ```
 

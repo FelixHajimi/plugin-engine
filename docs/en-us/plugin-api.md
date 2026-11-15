@@ -52,8 +52,8 @@ def showMessage(
     text: str,
     level: int = 0,
     duration: int = 3000,
-    clickedFunc: typing.Callable | None = None,
-    customWidget: QtWidgets.QWidget | None = None,
+    clickedFunc: typing.Optional[typing.Callable] = None,
+    customWidget: typing.Optional[QtWidgets.QWidget] = None,
 )
 ```
 
