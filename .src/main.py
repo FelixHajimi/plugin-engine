@@ -236,7 +236,7 @@ handlerFormatter = logging.Formatter(
 )
 
 startTimeHandler = logging.FileHandler(
-    f"logs/{time.strftime("%Y-%m-%d-%H-%M", time.localtime())}.log", encoding="utf-8"
+    f"logs/{time.strftime('%Y-%m-%d-%H-%M', time.localtime())}.log", encoding="utf-8"
 )
 startTimeHandler.setFormatter(handlerFormatter)
 startTimeHandler.setLevel(logging.WARN)
