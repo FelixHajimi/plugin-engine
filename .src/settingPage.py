@@ -46,14 +46,14 @@ def createSettings(
                     item["_prefix"][language]
                     + str(newWidget.value())
                     + item["_suffix"][language]
-                    + f"({item["_min"]}-{item["_max"]})"
+                    + f"({item['_min']}-{item['_max']})"
                 )
                 newWidget.valueChanged.connect(
                     lambda _, item=item, newWidget=newWidget, newWidgetLabel=newSubWidget: newWidgetLabel.setText(
                         item["_prefix"][language]
                         + str(newWidget.value())
                         + item["_suffix"][language]
-                        + f"({item["_min"]}-{item["_max"]})"
+                        + f"({item['_min']}-{item['_max']})"
                     )
                 )
                 newItemLayout.addWidget(newSubWidget)
@@ -69,14 +69,14 @@ def createSettings(
                     item["_prefix"][language]
                     + str(newWidget.value())
                     + item["_suffix"][language]
-                    + f"({item["_min"]}-{item["_max"]})"
+                    + f"({item['_min']}-{item['_max']})"
                 )
                 newWidget.valueChanged.connect(
                     lambda _, item=item, newWidget=newWidget, newWidgetLabel=newSubWidget: newWidgetLabel.setText(
                         item["_prefix"][language]
                         + str(newWidget.value())
                         + item["_suffix"][language]
-                        + f"({item["_min"]}-{item["_max"]})"
+                        + f"({item['_min']}-{item['_max']})"
                     )
                 )
                 newItemLayout.addWidget(newSubWidget)
@@ -109,7 +109,7 @@ def createSettings(
                 newItemLayout.addWidget(newWidget)
                 newSubWidget = QtWidgets.QPushButton()
                 newSubWidget.setStyleSheet(
-                    f"border: 1px solid black;background-color: {item["_default"]};"
+                    f"border: 1px solid black;background-color: {item['_default']};"
                 )
                 newWidget.textChanged.connect(
                     lambda _, newSubWidget=newSubWidget, newWidget=newWidget: (
@@ -132,7 +132,7 @@ def createSettings(
 
                 newSubWidget.clicked.connect(openDialog)
                 newItemLayout.addWidget(newSubWidget)
-            layout.addRow(f"{item["_label"][language]}: ", newItem)
+            layout.addRow(f"{item['_label'][language]}: ", newItem)
         elif item["_type"] == "group":
             newGroupLayout = QtWidgets.QFormLayout()
             newGroup = QtWidgets.QGroupBox()
