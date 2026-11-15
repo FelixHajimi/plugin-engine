@@ -1,6 +1,6 @@
 # Plugin Engine
 
-A desktop plugin engine built on PySide6. Turn features into standalone plugins and drop them into the app — no changes to the host program required.
+A desktop plugin engine built on QT. Turn features into standalone plugins and drop them into the app — no changes to the host program required.
 
 ## What It Is
 
@@ -23,6 +23,7 @@ Plugin Engine is a "host + plugin" desktop application framework. The host carri
 ```bash
 cd .src
 pip install PySide6
+pip install qtpy
 python main.py
 ```
 

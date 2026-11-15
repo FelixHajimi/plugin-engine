@@ -18,7 +18,7 @@ The `methods` event delivers main-application utilities to plugins:
 
 ```python
 class Translation:
-    languageMap: dict[str, dict[str, typing.Any]]
+    languageMap: typing.Dict[str, typing.Dict[str, typing.Any]]
     language: str
     def __init__(self, languageMap: dict, language: str) -> None: ...
     def exec(self, key: str, fallback: str = "") -> typing.Any: ...
