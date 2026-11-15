@@ -1,5 +1,5 @@
 import sys
-from PySide6 import QtWidgets, QtCore
+from qtpy import QtWidgets, QtCore
 from dataclasses import dataclass
 import types
 import typing
@@ -13,16 +13,16 @@ import time
 # Program Information
 __author__ = "FelixHajimi"
 __description__ = "Plugin Engine"
-__version__ = "re-0.0"
+__version__ = "pre-0.0.1"
 
 
 # Methods
 ## Data Class
 @dataclass
 class SidebarButtonData:
-    text: str | None
-    func: typing.Callable | None = lambda: None
-    group: str | None = None
+    text: typing.Optional[str]
+    func: typing.Optional[typing.Callable] = lambda: None
+    group: typing.Optional[str] = None
 
 
 @dataclass
@@ -40,8 +40,8 @@ class DataFileFormat:
     @dataclass
     class Meta:
         description: str
-        allowRead: list[str]
-        allowWrite: list[str]
+        allowRead: typing.List[str]
+        allowWrite: typing.List[str]
 
         def getDict(self):
             return {
@@ -74,7 +74,7 @@ class FuncItem:
 
 
 ## Program Built-in Methods
-def createSidebar(sidebar: QtWidgets.QWidget, data: list[SidebarButtonData | str]):
+def createSidebar(sidebar: QtWidgets.QWidget, data: typing.List[typing.Union[SidebarButtonData, str]]):
     layout = QtWidgets.QVBoxLayout(sidebar)
     for item in data:
         if isinstance(item, str):
@@ -181,8 +181,8 @@ class API:
         text: str,
         level: int = 0,
         duration: int = 3000,
-        clickedFunc: typing.Callable | None = None,
-        customWidget: QtWidgets.QWidget | None = None,
+        clickedFunc: typing.Optional[typing.Callable] = None,
+        customWidget: typing.Optional[QtWidgets.QWidget] = None,
     ):
         messageList = GV.messageList
         if messageList is None:
@@ -192,7 +192,7 @@ class API:
 
 
 class Translation:
-    def __init__(self, languageMap: dict[str, dict[str, typing.Any]], language: str):
+    def __init__(self, languageMap: typing.Dict[str, typing.Dict[str, typing.Any]], language: str):
         self.languageMap = languageMap
         self.language = language
 
@@ -292,8 +292,8 @@ with open(f"data/setting.json", "r", encoding="utf-8") as f:
 
 ## Set Global Variables
 class GlobalVariables:
-    updateFuncs: list[FuncItem] = []
-    messageList: "MessageList | None" = None
+    updateFuncs: typing.List[FuncItem] = []
+    messageList: "typing.Optional[MessageList]" = None
 
 
 GV = GlobalVariables()
@@ -320,7 +320,7 @@ class MessageCard(QtWidgets.QFrame):
         text: str,
         level: int,
         clickedFunc: typing.Callable,
-        customWidget: QtWidgets.QWidget | None,
+        customWidget: typing.Optional[QtWidgets.QWidget],
         duration: int,
         textWidth: int,
     ):
@@ -446,7 +446,7 @@ class MessageList(QtCore.QObject):
     def __init__(self, host: QtWidgets.QWidget):
         super().__init__(host)
         self.host = host
-        self.cards: list[MessageCard] = []
+        self.cards: typing.List[MessageCard] = []
         host.installEventFilter(self)
 
     def eventFilter(self, watched, event):
@@ -462,8 +462,8 @@ class MessageList(QtCore.QObject):
         text: str,
         level: int = 0,
         duration: int = 3000,
-        clickedFunc: typing.Callable | None = None,
-        customWidget: QtWidgets.QWidget | None = None,
+        clickedFunc: typing.Optional[typing.Callable] = None,
+        customWidget: typing.Optional[QtWidgets.QWidget] = None,
     ):
         while len(self.cards) >= self.MAX_COUNT:
             oldest = self.cards[0]
